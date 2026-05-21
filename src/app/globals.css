@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Design tokens provisórios — Fase 0.
+   Executar /plaid design antes da Fase 4 para gerar docs/design.md com tokens definitivos. */
+:root {
+  --background: #0f0f13;
+  --foreground: #e8e8ea;
+  --surface: #18181f;
+  --surface-hover: #22222c;
+  --border: #2a2a35;
+  --accent: #7c6af7;
+  --accent-hover: #6b5ce6;
+  --muted: #6b6b80;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}

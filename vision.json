@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "createdAt": "2026-05-21T18:16:07Z",
+    "updatedAt": "2026-05-21T18:16:07Z",
+    "version": "1.1",
+    "plaidVersion": "1.0"
+  },
+  "creator": {
+    "name": "Guilherme",
+    "expertise": "Gerente de marketing em uma empresa do mercado imobiliario (locacao multifamily) em Sao Paulo, conduzindo um time que executa acoes de branding e performance.",
+    "background": "Sou gerente de marketing e preciso de organizacao para conduzir minha area e equilibrar isso com a vida pessoal. Uso o Todoist ha tempos e gosto dele, mas me incomoda pagar mensalidade, lidar com limitacoes que nao moldam ao meu fluxo e ter uma gamificacao rasa demais para me motivar. Sou gamer de longa data (Diablo, Pokemon, Final Fantasy) e quero trazer o loop de evoluir dos RPGs para a organizacao do meu dia a dia."
+  },
+  "purpose": {
+    "whoYouHelp": "Eu mesmo: um gerente de marketing que precisa equilibrar a complexidade de conduzir uma area de branding e performance com a organizacao da vida pessoal, tudo em um so lugar.",
+    "problemYouSolve": "Eu comeco organizado, mas perco o ritmo. Sem um retorno que prenda, a disciplina diaria se dissolve e as tarefas se acumulam ao longo da semana. Os apps que uso hoje nao me dao motivacao suficiente para sustentar o habito.",
+    "desiredTransformation": "A organizacao vira um habito automatico. Subir de nivel me puxa de volta ao app todos os dias, e manter o foco deixa de depender so de forca de vontade: vira um loop de progressao que se sustenta sozinho.",
+    "whyYou": "Eu construo a ferramenta que eu mesmo uso todos os dias. Como gerente de marketing lidando com prazos e frentes paralelas, cada decisao de produto e testada na minha rotina real. E, como gamer de longa data, entendo na pratica o que faz um sistema de progressao prender."
+  },
+  "product": {
+    "name": "Ascend",
+    "oneLiner": "Ascend e um gerenciador de tarefas que transforma sua produtividade num RPG: cada tarefa concluida vira XP.",
+    "howItWorks": "Voce abre o Ascend na tela de entrada, que lista suas tarefas priorizadas por prazo, com destaque para o que vence hoje. Cria projetos e, dentro deles, tarefas com titulo, descricao opcional, prazo e recorrencia (ex.: toda terca-feira). Concluir uma tarefa rende XP; bater metas diarias, semanais e mensais rende XP bonus; o XP acumulado faz voce subir de nivel, de Lvl 1 a Lvl 100, com requisitos escalonados a cada nivel. Busca e filtros encontram qualquer tarefa por titulo, descricao ou projeto. E, a partir de uma tarefa, voce pode rascunhar um e-mail relacionado direto no Outlook.",
+    "keyCapabilities": [
+      "Projetos para agrupar tarefas, com criacao de tarefas vinculadas a um projeto, titulo, descricao opcional, prazo e recorrencia",
+      "Tela de entrada com tarefas priorizadas por data de entrega e destaque para o dia de hoje",
+      "Gamificacao RPG: XP por tarefa concluida, XP bonus por metas diarias, semanais e mensais, e niveis de 1 a 100 com requisitos de XP escalonados",
+      "Busca e filtros por titulo, descricao e projeto",
+      "Integracao com Outlook para rascunhar e-mails a partir de uma tarefa"
+    ],
+    "platform": "web",
+    "marketDifferentiation": "Diferente do Habitica, que e gamificado mas confuso e disperso, o Ascend mantem a gestao de tarefas limpa e direta, com o RPG como camada de motivacao e nao de distracao. E, diferente do Todoist, cuja gamificacao e rasa (apenas pontos de karma), o Ascend traz progressao de RPG de verdade: niveis de 1 a 100, XP escalonado e bonus por metas batidas.",
+    "magicMoment": "Voce conclui a ultima tarefa do dia, a barra de XP enche e estoura um Level Up: voce passou de Lvl 23 para Lvl 24. A sensacao de progresso bate na hora e da vontade de manter a sequencia amanha."
+  },
+  "audience": {
+    "primaryUser": "Guilherme, gerente de marketing no mercado imobiliario em Sao Paulo. Conduz um time de branding e performance, lida com muitos prazos e frentes paralelas, e usa o mesmo app para organizar trabalho e vida pessoal. Quer um sistema que o mantenha consistente sem depender so de disciplina.",
+    "secondaryUsers": [
+      "Nenhum no momento: o Ascend e de uso pessoal e single-user. Um uso secundario possivel no futuro seria abrir o app para outras pessoas (ex.: amigos gamers) que queiram a mesma abordagem de produtividade gamificada."
+    ],
+    "currentAlternatives": "Hoje o Todoist (pago) e a ferramenta principal. Antes e em paralelo: lembretes e listas no celular, o calendario e o Outlook para nao esquecer compromissos, e anotacoes soltas.",
+    "frustrations": "O Todoist cobra mensalidade, tem limitacoes que nao moldam ao fluxo do Guilherme e uma gamificacao rasa (so pontos de karma) que nao motiva de verdade. As alternativas genericas (lembretes, calendario, anotacoes) nao dao nenhum senso de progresso: fica tudo como obrigacao, sem retorno que sustente o habito."
+  },
+  "business": {
+    "revenueModel": "free",
+    "initialGoal": "Nos primeiros 90 dias depois de pronto: criar o habito diario. Usar o Ascend todos os dias, com uma sequencia consistente de metas diarias batidas e o nivel subindo de forma constante, sinal de que a gamificacao esta sustentando o foco.",
+    "sixMonthVision": "Em 6 meses, o Ascend e o unico gerenciador de tarefas do Guilherme, com o habito de uso diario consolidado e um nivel alto como prova de meses de consistencia. Pequenos refinamentos na gamificacao podem ter sido adicionados.",
+    "constraints": "Guilherme nao tem experiencia de programacao e vai construir o app nas horas vagas, dependendo de um agente de codigo (Claude Code) para escrever tudo. Tempo e o recurso mais escasso (trabalho full-time). Orcamento pessoal baixo, com preferencia por ferramentas de plano gratuito generoso.",
+    "goToMarket": "Nao se aplica: o Ascend e de uso pessoal, sem distribuicao ou monetizacao."
+  },
+  "feeling": {
+    "brandPersonality": "Um coach sereno e focado: calmo, encorajador e direto, mais mentor do que hype. Celebra o progresso sem exagero, mas com leveza; nao e duro nem sisudo.",
+    "toneOfVoice": "Leve e bem-humorado, dentro de um registro encorajador e direto. Fala de forma descontraida, com humor pontual, sem firula. Ex. de conclusao de tarefa: 'Mais uma que mordeu a poeira. +20 XP.' Ex. de lista vazia: 'Lista de hoje limpa. Ou voce e uma maquina, ou esqueceu de cadastrar tarefas.' Ex. de level up: 'Lvl 24 desbloqueado. O Guilherme de ontem nao chegava aos seus pes.'"
+  },
+  "techStack": {
+    "appType": "web",
+    "frontend": {
+      "choice": "Next.js",
+      "rationale": "Maior ecossistema React e melhor suporte das ferramentas de IA, o que faz o Claude Code construir com mais precisao e menos friccao. Integra muito bem com o Convex."
+    },
+    "backend": {
+      "choice": "Convex",
+      "rationale": "Backend-as-a-service reativo com zero boilerplate, ideal para construir com um agente de codigo. Ja traz auth, storage, agendamento e busca embutidos, com plano gratuito generoso."
+    },
+    "database": {
+      "choice": "Convex Database",
+      "rationale": "Banco documento-relacional embutido no Convex: vem no pacote, sem configuracao extra. Queries reativas atualizam a tela automaticamente e o schema e validado em TypeScript."
+    },
+    "auth": {
+      "choice": "Convex Auth",
+      "rationale": "Login nativo do Convex, com configuracao zero. Suporta e-mail/senha, login social e magic link. Para um app de usuario unico, e a opcao mais simples e suficiente."
+    },
+    "payments": {
+      "choice": "",
+      "rationale": "Sem pagamentos: o Ascend e de uso pessoal, sem monetizacao."
+    }
+  },
+  "tooling": {
+    "codingAgent": "claude-code"
+  }
+}
