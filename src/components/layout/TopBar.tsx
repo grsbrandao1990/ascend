@@ -1,11 +1,21 @@
-// XP HUD is added in Phase 2 (TASK-036). This bar reserves the space.
+"use client";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { XpBar } from "@/components/game/XpBar";
+import { LevelBadge } from "@/components/game/LevelBadge";
+
 export function TopBar() {
+  const stats = useQuery(api.stats.get);
+
   return (
-    <header className="h-12 flex-shrink-0 border-b border-border bg-surface flex items-center px-4 gap-4">
+    <header className="h-12 flex-shrink-0 border-b border-border bg-surface flex items-center px-4 gap-3">
       <div className="flex-1" />
-      <div className="text-xs text-on-surface-variant px-2 py-1 rounded border border-border">
-        XP HUD — Fase 2
-      </div>
+      {stats != null && (
+        <>
+          <XpBar xpInLevel={stats.xpInLevel} xpNeeded={stats.xpNeeded} />
+          <LevelBadge level={stats.level} />
+        </>
+      )}
     </header>
   );
 }

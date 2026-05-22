@@ -3,7 +3,7 @@
 > Gerado pelo PLAID. Os checkboxes são atualizados conforme as tarefas são concluídas.
 > O agente de código DEVE marcar as tarefas como `- [x]` à medida que as termina.
 
-**Status:** 25/62 tarefas concluídas
+**Status:** 41/62 tarefas concluídas
 **Fase atual:** Fase 2 — Gamificação e o Momento Mágico
 
 ## Build Philosophy
@@ -153,67 +153,67 @@
 **Phase prompt — entregue isto ao seu agente de código:**
 > "Leia docs/product-roadmap.md e encontre a Fase 2. Leia apenas as Reference sections listadas de docs/prd.md, docs/product-vision.md e docs/design.md. Continue da primeira tarefa não marcada. Após cada tarefa, marque-a como concluída no roadmap. Ao terminar a fase, crie a branch `phase-2/gamificacao`, faça commit, push e abra um PR."
 
-- [ ] **TASK-026** — Adicionar as tabelas `userStats` e `goalAwards` ao schema
+- [x] **TASK-026** — Adicionar as tabelas `userStats` e `goalAwards` ao schema
   Files: `convex/schema.ts`
   Notes: Implementar conforme PRD § Data Model, com os índices `by_user` e `by_user_type_period`. Verify: o schema aplica sem erro.
 
-- [ ] **TASK-027** — Criar o arquivo de constantes de gamificação
+- [x] **TASK-027** — Criar o arquivo de constantes de gamificação
   Files: `convex/gameConfig.ts`
   Notes: Centralizar TODAS as constantes (FR-016): `XP_PER_TASK = 10`; metas `DAILY_TARGET = 5`/`DAILY_BONUS = 50`, `WEEKLY_TARGET = 25`/`WEEKLY_BONUS = 200`, `MONTHLY_TARGET = 80`/`MONTHLY_BONUS = 500`; curva `xpToNextLevel(level) = 100 + 50 * level`. Ver PRD § Open Questions Q1–Q3. Verify: o arquivo exporta todas as constantes e funções.
 
-- [ ] **TASK-028** — Criar `userStats` no primeiro login
+- [x] **TASK-028** — Criar `userStats` no primeiro login
   Files: `convex/gamification.ts`, `convex/auth.ts`
   Notes: Ao autenticar pela primeira vez, criar a linha de `userStats` (nível 1, 0 XP, streak 0). Função idempotente — não recriar se já existe. Verify: novo usuário tem `userStats` criado uma única vez.
 
-- [ ] **TASK-029** — Implementar a lógica de XP e níveis
+- [x] **TASK-029** — Implementar a lógica de XP e níveis
   Files: `convex/gamification.ts`
   Notes: Funções puras: somar XP a `totalXp`; derivar `level`, `xpIntoLevel` e XP para o próximo nível a partir da curva de `gameConfig.ts`. Nível trava em 100; XP continua acumulando (PRD § 11). Verify: testes manuais com vários valores de XP retornam o nível certo.
 
-- [ ] **TASK-030** — Implementar a avaliação de metas diária, semanal e mensal
+- [x] **TASK-030** — Implementar a avaliação de metas diária, semanal e mensal
   Files: `convex/gamification.ts`
   Notes: Contar conclusões via índice `taskCompletions.by_user_date` para o dia/semana/mês; comparar com os alvos; conceder o bônus uma única vez por período, registrando em `goalAwards` (FR-008). Verify: bater uma meta concede o bônus exatamente uma vez.
 
-- [ ] **TASK-031** — Implementar a lógica de sequência (streak)
+- [x] **TASK-031** — Implementar a lógica de sequência (streak)
   Files: `convex/gamification.ts`
   Notes: Quando a meta diária é batida, atualizar `currentStreak` (incrementa se o dia anterior bateu meta, senão reinicia em 1) e `longestStreak`; usar `lastGoalMetDate`. Definição de "dia" no fuso America/Sao_Paulo (FR-009). Verify: streak incrementa em dias consecutivos e zera ao pular um dia.
 
-- [ ] **TASK-032** — Reescrever `tasks.complete` com a gamificação completa
+- [x] **TASK-032** — Reescrever `tasks.complete` com a gamificação completa
   Files: `convex/tasks.ts`, `convex/gamification.ts`
   Notes: A mutation registra a conclusão, concede o XP da tarefa, reavalia metas e concede bônus, recalcula nível e streak, e retorna `{ xpAwarded, goalBonuses, leveledUp, newLevel, totalXp }`. Ver PRD § API Specification (regra-chave). Verify: concluir tarefa atualiza `userStats` e retorna o objeto completo.
 
-- [ ] **TASK-033** — Atualizar `tasks.uncomplete` para estornar o XP da tarefa
+- [x] **TASK-033** — Atualizar `tasks.uncomplete` para estornar o XP da tarefa
   Files: `convex/tasks.ts`, `convex/gamification.ts`
   Notes: Desfazer remove a conclusão e o XP daquela tarefa; recalcula nível. Bônus de meta concedidos NÃO são estornados (PRD § Open Questions Q5). Verify: desfazer reduz o XP corretamente sem rebaixar nível abaixo do correto.
 
-- [ ] **TASK-034** — Implementar a query `stats.get`
+- [x] **TASK-034** — Implementar a query `stats.get`
   Files: `convex/stats.ts`
   Notes: Retornar `userStats` + progresso para o próximo nível + estado das três metas do dia/semana/mês (atual vs. alvo) + streak. Verify: a query retorna todos os campos de progressão.
 
-- [ ] **TASK-035** — Construir os componentes de XP e nível
+- [x] **TASK-035** — Construir os componentes de XP e nível
   Files: `src/components/game/XpBar.tsx`, `src/components/game/LevelBadge.tsx`
   Notes: `XpBar` mostra o progresso dentro do nível atual; `LevelBadge` mostra o número do nível. Ligados a `stats.get` via `useQuery` — reativos. Ver `docs/design.md § Components`. Verify: os componentes refletem o estado real.
 
-- [ ] **TASK-036** — Colocar o HUD de XP no layout autenticado
+- [x] **TASK-036** — Colocar o HUD de XP no layout autenticado
   Files: `src/components/layout/TopBar.tsx`, `src/app/(app)/layout.tsx`
   Notes: `XpBar` + `LevelBadge` visíveis no topo de todas as telas autenticadas (FR-010). Discreto, sem competir com o conteúdo. Verify: o HUD aparece em Hoje, Projeto, Busca e Perfil.
 
-- [ ] **TASK-037** — Aplicar atualização otimista na conclusão de tarefa
+- [x] **TASK-037** — Aplicar atualização otimista na conclusão de tarefa
   Files: `src/components/tasks/TaskRow.tsx`
   Notes: Usar o optimistic update do Convex para refletir o ganho de XP em < 200 ms; reverter se o servidor falhar (PRD § 11). Verify: a barra de XP sobe instantaneamente ao concluir.
 
-- [ ] **TASK-038** — Construir o overlay de "Level Up"
+- [x] **TASK-038** — Construir o overlay de "Level Up"
   Files: `src/components/game/LevelUpOverlay.tsx`
   Notes: Quando `tasks.complete` retorna `leveledUp = true`, exibir um overlay breve com o novo nível e mensagem na voz da marca ("Lvl 24 desbloqueado. O Guilherme de ontem não chegava aos seus pés."). Dispensável por clique, some sozinho. Ver PRD § UI/UX > Overlay Level Up. Verify: subir de nível dispara o overlay de forma confiável.
 
-- [ ] **TASK-039** — Construir o feedback de ganho de XP e de bônus de meta
+- [x] **TASK-039** — Construir o feedback de ganho de XP e de bônus de meta
   Files: `src/components/game/XpToast.tsx`, `src/components/tasks/TaskRow.tsx`
   Notes: Ao concluir, mostrar o `+XP` ganho; quando `goalBonuses` vier preenchido, mostrar o bônus de meta na voz da marca ("Semana fechada com folga. +200 XP de bônus na conta."). Verify: concluir tarefa mostra o XP; bater meta mostra o bônus.
 
-- [ ] **TASK-040** — Construir a tela de Perfil/Progresso
+- [x] **TASK-040** — Construir a tela de Perfil/Progresso
   Files: `src/app/(app)/profile/page.tsx`, `src/components/game/GoalCard.tsx`, `src/components/game/StatCard.tsx`
   Notes: Cartão de nível (nível, XP total, progresso), cartões das três metas (atual vs. alvo) e cartão da sequência (atual/recorde). Consome `stats.get` (FR-012). Ver PRD § UI/UX > Perfil. Verify: todos os dados de progressão exibidos e corretos.
 
-- [ ] **TASK-041** — Verificar o momento mágico de ponta a ponta
+- [x] **TASK-041** — Verificar o momento mágico de ponta a ponta
   Files: —
   Notes: Teste de aceitação: criar um projeto, cadastrar as tarefas do dia, concluir todas e confirmar que o XP sobe a cada conclusão e que o "Level Up" dispara ao cruzar o limiar. Ver Vision § Design do Momento Mágico. Verify: o fluxo completo funciona; o momento mágico acontece.
 

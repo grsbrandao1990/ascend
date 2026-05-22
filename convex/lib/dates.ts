@@ -9,6 +9,33 @@ export function todayInSP(): string {
   return nowInSP().toISOString().slice(0, 10);
 }
 
+export function yesterdayInSP(): string {
+  const d = nowInSP();
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+export function weekStartInSP(): string {
+  const d = nowInSP();
+  const day = d.getUTCDay(); // 0=Sun
+  const monday = day === 0 ? 6 : day - 1;
+  d.setUTCDate(d.getUTCDate() - monday);
+  return d.toISOString().slice(0, 10);
+}
+
+export function weekEndInSP(): string {
+  const d = nowInSP();
+  const day = d.getUTCDay();
+  const daysToSunday = day === 0 ? 0 : 7 - day;
+  d.setUTCDate(d.getUTCDate() + daysToSunday);
+  return d.toISOString().slice(0, 10);
+}
+
+export function monthStartInSP(): string {
+  const d = nowInSP();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`;
+}
+
 export function weekKeyInSP(): string {
   const d = nowInSP();
   const jan1 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));

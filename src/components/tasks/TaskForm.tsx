@@ -2,23 +2,26 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Id } from "@convex/_generated/dataModel";
+import { Doc, Id } from "@convex/_generated/dataModel";
 import { Dialog } from "@/components/ui/Dialog";
 
 interface TaskFormProps {
+  task?: Doc<"tasks">;
   projectId?: Id<"projects">;
   onClose: () => void;
 }
 
-export function TaskForm({ projectId, onClose }: TaskFormProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
+  const isEditing = task != null;
+  const [title, setTitle] = useState(task?.title ?? "");
+  const [description, setDescription] = useState(task?.description ?? "");
+  const [dueDate, setDueDate] = useState(task?.dueDate ?? "");
   const [selectedProjectId, setSelectedProjectId] = useState<
     Id<"projects"> | undefined
-  >(projectId);
+  >(task?.projectId ?? projectId);
   const [loading, setLoading] = useState(false);
   const create = useMutation(api.tasks.create);
+  const update = useMutation(api.tasks.update);
   const projects = useQuery(api.projects.list);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -26,12 +29,22 @@ export function TaskForm({ projectId, onClose }: TaskFormProps) {
     if (!title.trim()) return;
     setLoading(true);
     try {
-      await create({
-        title: title.trim(),
-        description: description.trim() || undefined,
-        dueDate: dueDate || undefined,
-        projectId: selectedProjectId,
-      });
+      if (isEditing) {
+        await update({
+          id: task._id,
+          title: title.trim(),
+          description: description.trim() || undefined,
+          dueDate: dueDate || undefined,
+          projectId: selectedProjectId,
+        });
+      } else {
+        await create({
+          title: title.trim(),
+          description: description.trim() || undefined,
+          dueDate: dueDate || undefined,
+          projectId: selectedProjectId,
+        });
+      }
       onClose();
     } finally {
       setLoading(false);
@@ -39,7 +52,7 @@ export function TaskForm({ projectId, onClose }: TaskFormProps) {
   }
 
   return (
-    <Dialog onClose={onClose} title="Nova tarefa">
+    <Dialog onClose={onClose} title={isEditing ? "Editar tarefa" : "Nova tarefa"}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm text-on-surface-variant mb-1">
@@ -118,7 +131,7 @@ export function TaskForm({ projectId, onClose }: TaskFormProps) {
             disabled={!title.trim() || loading}
             className="px-4 py-2 text-sm bg-primary text-on-primary rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? "Criando..." : "Criar tarefa"}
+            {loading ? "Salvando..." : isEditing ? "Salvar" : "Criar tarefa"}
           </button>
         </div>
       </form>

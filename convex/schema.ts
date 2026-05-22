@@ -34,8 +34,30 @@ export default defineSchema({
     taskId: v.id("tasks"),
     userId: v.id("users"),
     completedAt: v.number(),
-    dateKey: v.string(),
+    completionDate: v.string(),
+    xpAwarded: v.number(),
   })
     .index("by_task", ["taskId"])
-    .index("by_user_date", ["userId", "dateKey"]),
+    .index("by_task_date", ["taskId", "completionDate"])
+    .index("by_user_date", ["userId", "completionDate"]),
+
+  userStats: defineTable({
+    userId: v.id("users"),
+    totalXp: v.number(),
+    level: v.number(),
+    currentStreak: v.number(),
+    longestStreak: v.number(),
+    lastCompletionDate: v.optional(v.string()),
+    tasksCompleted: v.number(),
+  }).index("by_user", ["userId"]),
+
+  goalAwards: defineTable({
+    userId: v.id("users"),
+    goalType: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
+    periodKey: v.string(),
+    xpAwarded: v.number(),
+    awardedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_goal_period", ["userId", "goalType", "periodKey"]),
 });
