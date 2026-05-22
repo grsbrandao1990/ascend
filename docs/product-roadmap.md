@@ -3,8 +3,8 @@
 > Gerado pelo PLAID. Os checkboxes são atualizados conforme as tarefas são concluídas.
 > O agente de código DEVE marcar as tarefas como `- [x]` à medida que as termina.
 
-**Status:** 11/62 tarefas concluídas
-**Fase atual:** Fase 1 — Projetos e Tarefas
+**Status:** 25/62 tarefas concluídas
+**Fase atual:** Fase 2 — Gamificação e o Momento Mágico
 
 ## Build Philosophy
 
@@ -85,59 +85,59 @@
 **Phase prompt — entregue isto ao seu agente de código:**
 > "Leia docs/product-roadmap.md e encontre a Fase 1. Leia apenas as Reference sections listadas de docs/prd.md, docs/product-vision.md e docs/design.md. Continue da primeira tarefa não marcada. Após cada tarefa, marque-a como concluída no roadmap. Ao terminar a fase, crie a branch `phase-1/projetos-e-tarefas`, faça commit, push e abra um PR."
 
-- [ ] **TASK-012** — Definir o schema do banco para projetos, tarefas e conclusões
+- [x] **TASK-012** — Definir o schema do banco para projetos, tarefas e conclusões
   Files: `convex/schema.ts`
   Notes: Implementar as tabelas `projects`, `tasks` e `taskCompletions` exatamente como em PRD § Data Model, com seus índices. `userStats` e `goalAwards` virão na Fase 2. Verify: `npx convex dev` aplica o schema sem erro.
 
-- [ ] **TASK-013** — Implementar as queries e mutations de projetos
+- [x] **TASK-013** — Implementar as queries e mutations de projetos
   Files: `convex/projects.ts`
   Notes: `projects.list`, `projects.create`, `projects.rename`, `projects.setColor`, `projects.archive`, `projects.remove`. Toda função autentica e filtra por `userId`. `remove` faz soft delete do projeto e das tarefas. Ver PRD § API Specification. Verify: criar/listar/arquivar projeto pelo painel de funções do Convex.
 
-- [ ] **TASK-014** — Listar projetos na sidebar
+- [x] **TASK-014** — Listar projetos na sidebar
   Files: `src/components/layout/Sidebar.tsx`, `src/components/projects/ProjectList.tsx`
   Notes: Usar `useQuery` em `projects.list`. Projetos arquivados ficam ocultos por padrão. Verify: projetos criados aparecem na sidebar e atualizam sozinhos.
 
-- [ ] **TASK-015** — Construir o formulário de criar/editar projeto
+- [x] **TASK-015** — Construir o formulário de criar/editar projeto
   Files: `src/components/projects/ProjectForm.tsx`
   Notes: Dialog com campo de nome e seletor de cor. Botão de salvar desabilitado com nome vazio (FR-002). Verify: criar e renomear projeto pela UI.
 
-- [ ] **TASK-016** — Construir a página de um projeto
+- [x] **TASK-016** — Construir a página de um projeto
   Files: `src/app/(app)/projects/[id]/page.tsx`, `src/components/projects/ProjectHeader.tsx`
   Notes: Cabeçalho com nome do projeto e ações (renomear, recolorir, arquivar, excluir com confirmação). A lista de tarefas é preenchida na TASK-022. Ver PRD § UI/UX Requirements > Projeto. Verify: abrir um projeto pela sidebar mostra o cabeçalho e suas ações.
 
-- [ ] **TASK-017** — Implementar as queries e mutations de tarefas (CRUD básico)
+- [x] **TASK-017** — Implementar as queries e mutations de tarefas (CRUD básico)
   Files: `convex/tasks.ts`
   Notes: `tasks.create`, `tasks.update`, `tasks.remove` (soft delete), `tasks.get`, `tasks.listByProject`. Validar argumentos com os validadores do Convex. Sem recorrência ainda (campo opcional fica vazio). Ver PRD § API Specification. Verify: criar e editar tarefa pelo painel do Convex.
 
-- [ ] **TASK-018** — Implementar a query `tasks.listToday`
+- [x] **TASK-018** — Implementar a query `tasks.listToday`
   Files: `convex/tasks.ts`
   Notes: Retornar tarefas avulsas com `dueDate` igual a hoje ou no passado (vencidas), ordenadas por data, com flags `isOverdue` e `isToday`. Ocorrências recorrentes entram na Fase 3. Verify: tarefas com prazo de hoje e vencidas retornam corretamente.
 
-- [ ] **TASK-019** — Construir o componente de linha de tarefa (TaskRow)
+- [x] **TASK-019** — Construir o componente de linha de tarefa (TaskRow)
   Files: `src/components/tasks/TaskRow.tsx`
   Notes: Mostra checkbox de conclusão, título, projeto e prazo. Estados visuais distintos para vencida e concluída (FR-015). Verify: a linha renderiza nos três estados.
 
-- [ ] **TASK-020** — Construir o modal de formulário de tarefa
+- [x] **TASK-020** — Construir o modal de formulário de tarefa
   Files: `src/components/tasks/TaskForm.tsx`
   Notes: Dialog com projeto (select), título, descrição (textarea opcional), prazo (date picker opcional). Validação com `react-hook-form` + `zod`. Salvar desabilitado sem projeto+título. O controle de recorrência entra na Fase 3. Ver PRD § UI/UX Requirements > Modal Formulário de Tarefa. Verify: criar tarefa em menos de 10 s e 4 campos.
 
-- [ ] **TASK-021** — Construir a tela Hoje
+- [x] **TASK-021** — Construir a tela Hoje
   Files: `src/app/(app)/today/page.tsx`, `src/components/tasks/TaskList.tsx`
   Notes: Consumir `tasks.listToday`, listar com `TaskRow` ordenado por data; hoje em destaque, vencidas sinalizadas no topo. Botão de nova tarefa. Ver PRD § UI/UX Requirements > Hoje. Verify: a tela responde "o que faço hoje?".
 
-- [ ] **TASK-022** — Listar tarefas na página do projeto
+- [x] **TASK-022** — Listar tarefas na página do projeto
   Files: `src/app/(app)/projects/[id]/page.tsx`
   Notes: Consumir `tasks.listByProject`. Botão de nova tarefa já com o projeto pré-selecionado. Verify: tarefas do projeto aparecem na página dele.
 
-- [ ] **TASK-023** — Implementar conclusão básica de tarefa (sem XP ainda)
+- [x] **TASK-023** — Implementar conclusão básica de tarefa (sem XP ainda)
   Files: `convex/tasks.ts`, `src/components/tasks/TaskRow.tsx`
   Notes: `tasks.complete` e `tasks.uncomplete` em versão simples — só registram `taskCompletions` e marcam `isCompleted`. A lógica de gamificação completa entra na Fase 2. Verify: marcar/desmarcar tarefa funciona e persiste.
 
-- [ ] **TASK-024** — Adicionar estados de carregando e vazio às listas de tarefas
+- [x] **TASK-024** — Adicionar estados de carregando e vazio às listas de tarefas
   Files: `src/components/tasks/TaskList.tsx`, `src/components/ui/EmptyState.tsx`
   Notes: Skeleton durante o carregamento; estado vazio na voz da marca ("Lista de hoje limpa. Ou você é uma máquina, ou esqueceu de cadastrar tarefas."). Ver Vision § Guia de Voz e Tom. Verify: estados aparecem corretamente sem dados.
 
-- [ ] **TASK-025** — Adicionar a query `tasks.search` e a tela de Busca (texto + filtro de projeto)
+- [x] **TASK-025** — Adicionar a query `tasks.search` e a tela de Busca (texto + filtro de projeto)
   Files: `convex/tasks.ts`, `src/app/(app)/search/page.tsx`
   Notes: Versão inicial: filtrar por texto no título/descrição em memória e por `projectId`. O search index do Convex é otimizado na Fase 3 (TASK-049). Verify: buscar por termo e por projeto retorna resultados.
 

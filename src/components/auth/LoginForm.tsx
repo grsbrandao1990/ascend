@@ -35,14 +35,14 @@ export function LoginForm() {
   }
 
   const inputClass =
-    "w-full px-3 py-2 rounded-md border border-border bg-surface text-foreground placeholder:text-muted text-sm focus:outline-none focus:ring-2 focus:ring-accent";
+    "w-full px-3 py-2 rounded-md border border-border bg-surface text-on-surface placeholder:text-on-surface-variant text-sm focus:outline-none focus:ring-2 focus:ring-primary";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-foreground mb-1"
+          className="block text-sm font-medium text-on-surface mb-1"
         >
           E-mail
         </label>
@@ -61,7 +61,7 @@ export function LoginForm() {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-foreground mb-1"
+          className="block text-sm font-medium text-on-surface mb-1"
         >
           Senha
         </label>
@@ -78,18 +78,14 @@ export function LoginForm() {
         />
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       <button
         type="submit"
         disabled={isLoading || !email || !password}
-        className="w-full py-2 px-4 rounded-md bg-accent text-white text-sm font-medium disabled:opacity-50 hover:bg-accent-hover transition-colors cursor-pointer"
+        className="w-full py-2 px-4 rounded-md bg-primary text-on-primary text-sm font-medium disabled:opacity-50 hover:bg-primary-hover transition-colors cursor-pointer"
       >
-        {isLoading
-          ? "Aguarda..."
-          : isSignUp
-            ? "Criar conta"
-            : "Entrar"}
+        {isLoading ? "Aguarda..." : isSignUp ? "Criar conta" : "Entrar"}
       </button>
 
       <button
@@ -98,7 +94,7 @@ export function LoginForm() {
           setIsSignUp(!isSignUp);
           setError(null);
         }}
-        className="w-full text-sm text-muted hover:text-foreground transition-colors"
+        className="w-full text-sm text-on-surface-variant hover:text-on-surface transition-colors"
       >
         {isSignUp ? "Já tem conta? Entrar" : "Primeira vez? Criar conta"}
       </button>

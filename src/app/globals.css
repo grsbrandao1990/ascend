@@ -1,33 +1,40 @@
 @import "tailwindcss";
 
-/* Design tokens provisórios — Fase 0.
-   Executar /plaid design antes da Fase 4 para gerar docs/design.md com tokens definitivos. */
 :root {
-  --background: #0f0f13;
-  --foreground: #e8e8ea;
-  --surface: #18181f;
-  --surface-hover: #22222c;
-  --border: #2a2a35;
-  --accent: #7c6af7;
-  --accent-hover: #6b5ce6;
-  --muted: #6b6b80;
+  --background: #0F0F18;
+  --surface: #1A1A2A;
+  --surface-raised: #24243A;
+  --primary: #7C5CFC;
+  --primary-hover: #9277FF;
+  --on-primary: #FFFFFF;
+  --accent: #2DD4BF;
+  --on-surface: #F4F4F8;
+  --on-surface-variant: #A0A0B8;
+  --border: #2E2E44;
+  --success: #4ADE80;
+  --warning: #F5A623;
+  --error: #F2555A;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --color-surface-hover: var(--surface-hover);
-  --color-border: var(--border);
+  --color-surface-raised: var(--surface-raised);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
   --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-muted: var(--muted);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  color: var(--on-surface);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
