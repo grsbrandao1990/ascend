@@ -20,7 +20,11 @@ export function XpToast({ xpAwarded, goalBonuses, onDismiss }: XpToastProps) {
   }, [onDismiss]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-2 items-end pointer-events-none">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-6 right-6 z-40 flex flex-col gap-2 items-end pointer-events-none"
+    >
       <div
         className="toast-enter flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
         style={{

@@ -71,6 +71,20 @@ Após 2–4 semanas de uso real, ajustar as constantes em `convex/gameConfig.ts`
 - `MONTHLY_TARGET` / `MONTHLY_BONUS` — meta mensal
 - `xpToNextLevel(level)` — curva de XP por nível
 
+## Smoke test de produção
+
+Após cada deploy, rodar o seguinte checklist no app de produção:
+
+- [ ] Login com e-mail e senha funciona, redireciona para `/today`
+- [ ] Criar projeto com nome e cor
+- [ ] Criar tarefa avulsa com prazo de hoje → aparece na tela Hoje
+- [ ] Concluir tarefa → XP sobe na barra do topo
+- [ ] Bater meta diária (5 tarefas) → toast de bônus aparece
+- [ ] Criar tarefa recorrente diária → aparece no dia seguinte
+- [ ] Buscar por título de uma tarefa → resultado aparece
+- [ ] Acessar Perfil → nível, XP, metas e streak exibidos
+- [ ] Sair da conta (Configurações → Sair) → redireciona para login
+
 ## Fases do build
 
 | Fase | Branch | Tarefas |

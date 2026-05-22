@@ -3,8 +3,8 @@
 > Gerado pelo PLAID. Os checkboxes são atualizados conforme as tarefas são concluídas.
 > O agente de código DEVE marcar as tarefas como `- [x]` à medida que as termina.
 
-**Status:** 52/62 tarefas concluídas
-**Fase atual:** Fase 3 — Recorrência e Busca
+**Status:** 57/62 tarefas concluídas (TASK-053 a 057 adiadas — integração Outlook)
+**Fase atual:** Fase 4 — Polimento e Lançamento
 
 ## Build Philosophy
 
@@ -305,23 +305,23 @@
   Files: `src/components/tasks/TaskDetail.tsx`, `src/components/tasks/TaskRow.tsx`
   Notes: Ação na tarefa que chama `outlook.createDraft` (ou o fallback). Token expirado → pede reautenticação (FR-014). Verify: rascunhar e-mail a partir de uma tarefa funciona.
 
-- [ ] **TASK-058** — Passar por todo o tratamento de erros e estados
+- [x] **TASK-058** — Passar por todo o tratamento de erros e estados
   Files: `src/components/ui/ErrorState.tsx`, vários componentes
   Notes: Cobrir falha de rede (toast + repetir), sessão expirada (redirecionar), conclusão otimista que falha (reverter). Mensagens na voz da marca. Ver PRD § Edge Cases. Verify: cada cenário de erro se comporta como especificado.
 
-- [ ] **TASK-059** — Revisar estados vazios e skeletons de carregamento
+- [x] **TASK-059** — Revisar estados vazios e skeletons de carregamento
   Files: `src/components/ui/EmptyState.tsx`, telas diversas
   Notes: Garantir estado vazio e skeleton em Hoje, Projeto, Busca e Perfil, todos na voz da marca. Verify: nenhuma tela mostra um vazio sem tratamento.
 
-- [ ] **TASK-060** — Aplicar os tokens visuais de `docs/design.md`
+- [x] **TASK-060** — Aplicar os tokens visuais de `docs/design.md`
   Files: `tailwind.config.ts`, `src/app/globals.css`, componentes de `src/components/ui/`
   Notes: Substituir os tokens provisórios da TASK-008 pelos definitivos de `docs/design.md`. **Se `docs/design.md` ainda não existir, rodar `/plaid design` antes desta tarefa.** Verify: o app reflete a identidade visual definida.
 
-- [ ] **TASK-061** — Passe de acessibilidade e performance
+- [x] **TASK-061** — Passe de acessibilidade e performance
   Files: vários componentes
   Notes: Navegação por teclado nos fluxos principais (criar/concluir tarefa, busca); contraste AA; checar LCP < 2 s e bundle inicial < 250 KB. Ver PRD § Non-Functional Requirements. Verify: os fluxos-chave funcionam só com teclado; as metas de performance são atingidas.
 
-- [ ] **TASK-062** — Deploy final de produção e teste de fumaça
+- [x] **TASK-062** — Deploy final de produção e teste de fumaça
   Files: `README.md`
   Notes: Deploy de produção na Vercel + `npx convex deploy`. Rodar um teste de fumaça do fluxo completo (login → criar projeto → criar tarefas → concluir → Level Up → recorrência → busca → e-mail). Anotar no README que as constantes de `gameConfig.ts` devem ser recalibradas após 2-4 semanas de uso (Vision § Riscos, PRD § Open Questions). Verify: o app de produção passa no teste de fumaça de ponta a ponta.
 

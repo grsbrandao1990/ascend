@@ -15,6 +15,7 @@
   --success: #4ADE80;
   --warning: #F5A623;
   --error: #F2555A;
+  --info: #5B9DF9;
 }
 
 @theme inline {
@@ -32,13 +33,25 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
+  --color-info: var(--info);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Border radius conforme design.md */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 
 body {
   background: var(--background);
   color: var(--on-surface);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 @keyframes slide-up-fade-in {

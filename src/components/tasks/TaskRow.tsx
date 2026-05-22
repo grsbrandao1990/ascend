@@ -28,6 +28,7 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const [editing, setEditing] = useState(false);
   const [toast, setToast] = useState<GamificationResult | null>(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
   const project = useQuery(
     api.projects.getById,
     showProject && task.projectId ? { id: task.projectId } : "skip"
@@ -39,14 +40,19 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const occurrenceDate = task.recurrence ? todayString() : undefined;
 
   async function handleToggle() {
-    if (isCompleted) {
-      void uncomplete({ id: task._id, occurrenceDate });
-    } else {
-      const result = await complete({ id: task._id, occurrenceDate });
-      if (result.xpAwarded > 0) {
-        setToast(result);
-        if (result.leveledUp) setShowLevelUp(true);
+    setToggleError(null);
+    try {
+      if (isCompleted) {
+        await uncomplete({ id: task._id, occurrenceDate });
+      } else {
+        const result = await complete({ id: task._id, occurrenceDate });
+        if (result.xpAwarded > 0) {
+          setToast(result);
+          if (result.leveledUp) setShowLevelUp(true);
+        }
       }
+    } catch {
+      setToggleError("Não consegui atualizar. Tenta de novo.");
     }
   }
 
@@ -140,6 +146,10 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
           </button>
         )}
       </div>
+
+      {toggleError && (
+        <p className="px-3 py-1 text-xs text-error">{toggleError}</p>
+      )}
 
       {editing && <TaskForm task={task} onClose={() => setEditing(false)} />}
 

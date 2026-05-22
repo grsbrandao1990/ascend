@@ -34,6 +34,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
     Id<"projects"> | undefined
   >(task?.projectId ?? projectId);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Recorrência
   const [recurring, setRecurring] = useState(task?.recurrence != null);
@@ -88,6 +89,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
     }
 
     setLoading(true);
+    setSubmitError(null);
     const recurrence = buildRecurrence();
     try {
       if (isEditing) {
@@ -110,6 +112,8 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
         });
       }
       onClose();
+    } catch {
+      setSubmitError("Não consegui salvar. Tenta de novo em um instante.");
     } finally {
       setLoading(false);
     }
@@ -120,10 +124,11 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Título */}
         <div>
-          <label className="block text-sm text-on-surface-variant mb-1">
+          <label htmlFor="task-title" className="block text-sm text-on-surface-variant mb-1">
             Título
           </label>
           <input
+            id="task-title"
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -135,10 +140,11 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
 
         {/* Descrição */}
         <div>
-          <label className="block text-sm text-on-surface-variant mb-1">
+          <label htmlFor="task-description" className="block text-sm text-on-surface-variant mb-1">
             Descrição
           </label>
           <textarea
+            id="task-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Detalhes opcionais..."
@@ -282,6 +288,10 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
             </div>
           )}
         </div>
+
+        {submitError && (
+          <p className="text-xs text-error">{submitError}</p>
+        )}
 
         <div className="flex justify-end gap-2 pt-2">
           <button

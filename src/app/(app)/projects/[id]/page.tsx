@@ -21,9 +21,12 @@ export default function ProjectPage({
 
   if (project === null) {
     return (
-      <p className="text-sm text-on-surface-variant">
-        Projeto não encontrado.
-      </p>
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
+        <p className="text-sm text-on-surface">Projeto não encontrado.</p>
+        <p className="text-xs text-on-surface-variant">
+          Pode ter sido arquivado ou excluído.
+        </p>
+      </div>
     );
   }
 
