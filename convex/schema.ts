@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { recurrenceValidator } from "./recurrence";
 
 export default defineSchema({
   ...authTables,
@@ -21,6 +22,7 @@ export default defineSchema({
     title: v.string(),
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
+    recurrence: v.optional(recurrenceValidator),
     completed: v.boolean(),
     completedAt: v.optional(v.number()),
     deleted: v.boolean(),
@@ -28,7 +30,8 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_project", ["projectId"])
-    .index("by_user_completed", ["userId", "completed"]),
+    .index("by_user_completed", ["userId", "completed"])
+    .searchIndex("search_title", { searchField: "title", filterFields: ["userId"] }),
 
   taskCompletions: defineTable({
     taskId: v.id("tasks"),

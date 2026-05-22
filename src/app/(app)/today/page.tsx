@@ -10,8 +10,8 @@ export default function TodayPage() {
   const tasks = useQuery(api.tasks.listToday);
   const [showForm, setShowForm] = useState(false);
 
-  const pending = tasks?.filter((t) => !t.completed);
-  const completedToday = tasks?.filter((t) => t.completed);
+  const pending = tasks?.filter((t) => !(t.completedToday ?? t.completed));
+  const completedToday = tasks?.filter((t) => t.completedToday ?? t.completed);
 
   return (
     <div>

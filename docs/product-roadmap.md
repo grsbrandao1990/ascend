@@ -3,8 +3,8 @@
 > Gerado pelo PLAID. Os checkboxes são atualizados conforme as tarefas são concluídas.
 > O agente de código DEVE marcar as tarefas como `- [x]` à medida que as termina.
 
-**Status:** 41/62 tarefas concluídas
-**Fase atual:** Fase 2 — Gamificação e o Momento Mágico
+**Status:** 52/62 tarefas concluídas
+**Fase atual:** Fase 3 — Recorrência e Busca
 
 ## Build Philosophy
 
@@ -229,47 +229,47 @@
 **Phase prompt — entregue isto ao seu agente de código:**
 > "Leia docs/product-roadmap.md e encontre a Fase 3. Leia apenas as Reference sections listadas de docs/prd.md, docs/product-vision.md e docs/design.md. Continue da primeira tarefa não marcada. Após cada tarefa, marque-a como concluída no roadmap. Ao terminar a fase, crie a branch `phase-3/recorrencia-e-busca`, faça commit, push e abra um PR."
 
-- [ ] **TASK-042** — Adicionar o controle de recorrência ao formulário de tarefa
+- [x] **TASK-042** — Adicionar o controle de recorrência ao formulário de tarefa
   Files: `src/components/tasks/TaskForm.tsx`
   Notes: Controle opcional: tipo (diária/semanal/mensal); para semanal, dias da semana; para mensal, dia do mês. Ao ativar recorrência, substituir o campo de prazo pela regra. Ver PRD § UI/UX > Modal Formulário de Tarefa. Verify: criar tarefa recorrente nos três tipos.
 
-- [ ] **TASK-043** — Implementar a lógica do motor de recorrência
+- [x] **TASK-043** — Implementar a lógica do motor de recorrência
   Files: `convex/recurrence.ts`
   Notes: Função pura: dada uma regra de recorrência e uma data, decidir se a tarefa "ocorre" naquele dia. Recorrência mensal no dia 31 em mês de 30 dias cai no último dia do mês (PRD § Edge Cases). Verify: testes manuais cobrem diária, semanal e os casos de borda mensais.
 
-- [ ] **TASK-044** — Implementar `recurrence.ensureTodayOccurrences`
+- [x] **TASK-044** — Implementar `recurrence.ensureTodayOccurrences`
   Files: `convex/recurrence.ts`
   Notes: `internalMutation` idempotente que garante a disponibilidade das ocorrências recorrentes do dia. Não duplicar se rodar duas vezes (FR-004). Verify: rodar a função duas vezes não gera duplicatas.
 
-- [ ] **TASK-045** — Configurar o cron diário de recorrência
+- [x] **TASK-045** — Configurar o cron diário de recorrência
   Files: `convex/crons.ts`
   Notes: Agendar `recurrence.ensureTodayOccurrences` para rodar uma vez por dia (início do dia, fuso America/Sao_Paulo). Ver PRD § Architecture Overview. Verify: o cron aparece registrado no painel do Convex.
 
-- [ ] **TASK-046** — Incluir as ocorrências recorrentes em `tasks.listToday`
+- [x] **TASK-046** — Incluir as ocorrências recorrentes em `tasks.listToday`
   Files: `convex/tasks.ts`
   Notes: A tela Hoje passa a mostrar as ocorrências recorrentes do dia além das tarefas avulsas. Uma ocorrência recorrente já concluída hoje (via `taskCompletions.by_task_date`) não reaparece. Verify: tarefa "toda terça" aparece nas terças e some ao ser concluída.
 
-- [ ] **TASK-047** — Suportar a conclusão de ocorrências recorrentes
+- [x] **TASK-047** — Suportar a conclusão de ocorrências recorrentes
   Files: `convex/tasks.ts`, `src/components/tasks/TaskRow.tsx`
   Notes: `tasks.complete` aceita `occurrenceDate`; registra a conclusão da ocorrência sem afetar as futuras (FR-004). Concluir a ocorrência também concede XP normalmente. Verify: concluir a ocorrência de hoje mantém a próxima ocorrência programada.
 
-- [ ] **TASK-048** — Sinalizar visualmente tarefas recorrentes
+- [x] **TASK-048** — Sinalizar visualmente tarefas recorrentes
   Files: `src/components/tasks/TaskRow.tsx`
   Notes: Indicador visual de que uma linha é uma ocorrência recorrente, distinguindo-a de uma tarefa avulsa (FR-015). Verify: ocorrências recorrentes são identificáveis na lista.
 
-- [ ] **TASK-049** — Otimizar a busca com o search index do Convex
+- [x] **TASK-049** — Otimizar a busca com o search index do Convex
   Files: `convex/tasks.ts`
   Notes: Reescrever `tasks.search` para usar o `searchIndex` `search_title` (definido no schema), filtrado por `userId`; complementar com filtro por descrição e por `projectId` (FR-011). Verify: a busca retorna resultados corretos e rápidos.
 
-- [ ] **TASK-050** — Refinar a tela de Busca
+- [x] **TASK-050** — Refinar a tela de Busca
   Files: `src/app/(app)/search/page.tsx`
   Notes: Busca ao vivo conforme digita; filtro de projeto; estados vazio/sem-resultado na voz da marca. Ver PRD § UI/UX > Busca. Verify: encontrar qualquer tarefa por título, descrição ou projeto.
 
-- [ ] **TASK-051** — Tratar a edição de recorrência de uma tarefa existente
+- [x] **TASK-051** — Tratar a edição de recorrência de uma tarefa existente
   Files: `convex/tasks.ts`, `src/components/tasks/TaskForm.tsx`
   Notes: Editar a regra de recorrência vale da edição em diante; ocorrências passadas já concluídas permanecem registradas (PRD § Edge Cases). Verify: alterar a recorrência não apaga o histórico de conclusões.
 
-- [ ] **TASK-052** — Verificar a recorrência de ponta a ponta
+- [x] **TASK-052** — Verificar a recorrência de ponta a ponta
   Files: —
   Notes: Teste de aceitação: criar tarefas recorrentes diária, semanal e mensal; avançar datas; confirmar que aparecem nos dias certos, sem duplicar, e que a conclusão não afeta ocorrências futuras. Verify: todos os casos de recorrência do PRD § Edge Cases passam.
 

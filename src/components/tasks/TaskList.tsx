@@ -3,8 +3,10 @@ import { Doc } from "@convex/_generated/dataModel";
 import { TaskRow } from "./TaskRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 
+export type TodayTask = Doc<"tasks"> & { completedToday?: boolean };
+
 interface TaskListProps {
-  tasks: Doc<"tasks">[] | undefined;
+  tasks: TodayTask[] | undefined;
   showProject?: boolean;
   emptyMessage?: string;
   emptyDescription?: string;

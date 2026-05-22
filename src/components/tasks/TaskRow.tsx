@@ -2,15 +2,15 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Doc } from "@convex/_generated/dataModel";
-import { Pencil } from "lucide-react";
-import { isOverdue, isToday } from "@/lib/dates";
+import { Pencil, Repeat2 } from "lucide-react";
+import { isOverdue, isToday, todayString } from "@/lib/dates";
 import { TaskForm } from "./TaskForm";
 import { XpToast } from "@/components/game/XpToast";
 import { LevelUpOverlay } from "@/components/game/LevelUpOverlay";
+import type { TodayTask } from "./TaskList";
 
 interface TaskRowProps {
-  task: Doc<"tasks">;
+  task: TodayTask;
   showProject?: boolean;
 }
 
@@ -33,17 +33,19 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
     showProject && task.projectId ? { id: task.projectId } : "skip"
   );
 
-  const overdue =
-    task.dueDate != null && !task.completed && isOverdue(task.dueDate);
+  // Para tarefas recorrentes, o estado "concluída" vem do campo sintético completedToday
+  const isCompleted = task.completedToday ?? task.completed;
+  const overdue = task.dueDate != null && !isCompleted && isOverdue(task.dueDate);
+  const occurrenceDate = task.recurrence ? todayString() : undefined;
 
   async function handleToggle() {
-    if (task.completed) {
-      void uncomplete({ id: task._id });
+    if (isCompleted) {
+      void uncomplete({ id: task._id, occurrenceDate });
     } else {
-      const result = await complete({ id: task._id });
-      setToast(result);
-      if (result.leveledUp) {
-        setShowLevelUp(true);
+      const result = await complete({ id: task._id, occurrenceDate });
+      if (result.xpAwarded > 0) {
+        setToast(result);
+        if (result.leveledUp) setShowLevelUp(true);
       }
     }
   }
@@ -54,13 +56,13 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
         <button
           onClick={handleToggle}
           className={`mt-0.5 w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
-            task.completed
+            isCompleted
               ? "bg-success border-success"
               : "border-border hover:border-primary"
           }`}
-          aria-label={task.completed ? "Desmarcar tarefa" : "Concluir tarefa"}
+          aria-label={isCompleted ? "Desmarcar tarefa" : "Concluir tarefa"}
         >
-          {task.completed && (
+          {isCompleted && (
             <svg
               className="w-2.5 h-2.5 text-background"
               fill="none"
@@ -80,7 +82,7 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
         <div className="flex-1 min-w-0">
           <p
             className={`text-sm ${
-              task.completed
+              isCompleted
                 ? "text-on-surface-variant line-through"
                 : "text-on-surface"
             }`}
@@ -99,12 +101,23 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
               </span>
             )}
 
+            {task.recurrence && (
+              <span className="flex items-center gap-1 text-xs text-on-surface-variant">
+                <Repeat2 className="w-3 h-3" />
+                {task.recurrence.type === "daily"
+                  ? "Diária"
+                  : task.recurrence.type === "weekly"
+                    ? "Semanal"
+                    : "Mensal"}
+              </span>
+            )}
+
             {task.dueDate && (
               <span
                 className={`text-xs ${
                   overdue
                     ? "text-warning"
-                    : task.completed
+                    : isCompleted
                       ? "text-on-surface-variant"
                       : isToday(task.dueDate)
                         ? "text-on-surface"
@@ -117,7 +130,7 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
           </div>
         </div>
 
-        {!task.completed && (
+        {!isCompleted && (
           <button
             onClick={() => setEditing(true)}
             className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface text-on-surface-variant hover:text-on-surface transition-all flex-shrink-0"
