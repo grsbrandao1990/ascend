@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Pencil, Repeat2 } from "lucide-react";
+import { Pencil, Repeat2, Trash2 } from "lucide-react";
 import { isOverdue, isToday, todayString } from "@/lib/dates";
 import { TaskForm } from "./TaskForm";
 import { XpToast } from "@/components/game/XpToast";
@@ -25,7 +25,9 @@ interface GamificationResult {
 export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const complete = useMutation(api.tasks.complete);
   const uncomplete = useMutation(api.tasks.uncomplete);
+  const remove = useMutation(api.tasks.remove);
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState<GamificationResult | null>(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
@@ -136,15 +138,35 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
           </div>
         </div>
 
-        {!isCompleted && (
-          <button
-            onClick={() => setEditing(true)}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-surface text-on-surface-variant hover:text-on-surface transition-all flex-shrink-0"
-            aria-label="Editar tarefa"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-all flex-shrink-0">
+          {!isCompleted && (
+            <button
+              onClick={() => setEditing(true)}
+              className="p-1 rounded hover:bg-surface text-on-surface-variant hover:text-on-surface transition-colors"
+              aria-label="Editar tarefa"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {confirmDelete ? (
+            <button
+              onClick={() => remove({ id: task._id })}
+              className="p-1 rounded bg-error/10 text-error hover:bg-error/20 transition-colors text-xs font-medium px-2"
+              aria-label="Confirmar exclusão"
+            >
+              Excluir?
+            </button>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              onBlur={() => setConfirmDelete(false)}
+              className="p-1 rounded hover:bg-surface text-on-surface-variant hover:text-error transition-colors"
+              aria-label="Excluir tarefa"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {toggleError && (
