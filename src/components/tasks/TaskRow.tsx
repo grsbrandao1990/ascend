@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Pencil, Repeat2, Trash2 } from "lucide-react";
+import { Copy, Pencil, Repeat2, Trash2 } from "lucide-react";
 import { isOverdue, isToday, todayString } from "@/lib/dates";
 import { TaskForm } from "./TaskForm";
 import { XpToast } from "@/components/game/XpToast";
@@ -26,6 +26,7 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const complete = useMutation(api.tasks.complete);
   const uncomplete = useMutation(api.tasks.uncomplete);
   const remove = useMutation(api.tasks.remove);
+  const duplicate = useMutation(api.tasks.duplicate);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState<GamificationResult | null>(null);
@@ -148,6 +149,13 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
               <Pencil className="w-3.5 h-3.5" />
             </button>
           )}
+          <button
+            onClick={() => duplicate({ id: task._id })}
+            className="p-1 rounded hover:bg-surface text-on-surface-variant hover:text-on-surface transition-colors"
+            aria-label="Duplicar tarefa"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
           {confirmDelete ? (
             <button
               onClick={() => remove({ id: task._id })}
