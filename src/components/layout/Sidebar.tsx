@@ -17,10 +17,12 @@ export function Sidebar() {
 
   return (
     <aside className="w-56 flex-shrink-0 border-r border-border bg-surface flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-border">
-        <span className="text-sm font-bold tracking-widest text-on-surface">
-          ASCEND
-        </span>
+      <div className="px-4 py-4 border-b border-border flex items-center">
+        <img
+          src="/logo-horizontal.svg"
+          alt="Ascend"
+          className="h-8 w-auto"
+        />
       </div>
 
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
