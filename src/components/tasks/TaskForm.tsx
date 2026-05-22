@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Doc, Id } from "@convex/_generated/dataModel";
 import { Dialog } from "@/components/ui/Dialog";
+import { parseNlpDate } from "@/lib/nlpDate";
 
 interface TaskFormProps {
   task?: Doc<"tasks">;
@@ -24,24 +25,45 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   const update = useMutation(api.tasks.update);
   const projects = useQuery(api.projects.list);
 
+  function applyNlp(currentTitle: string, currentDate: string) {
+    if (currentDate) return; // don't override a date the user set manually
+    const { cleanTitle, date } = parseNlpDate(currentTitle);
+    if (date) {
+      setTitle(cleanTitle);
+      setDueDate(date);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
+
+    // Re-run parse so Enter-to-submit works (onBlur may not have fired)
+    let finalTitle = title.trim();
+    let finalDate = dueDate;
+    if (!finalDate) {
+      const { cleanTitle, date } = parseNlpDate(finalTitle);
+      if (date) {
+        finalTitle = cleanTitle;
+        finalDate = date;
+      }
+    }
+
     setLoading(true);
     try {
       if (isEditing) {
         await update({
           id: task._id,
-          title: title.trim(),
+          title: finalTitle,
           description: description.trim() || undefined,
-          dueDate: dueDate || undefined,
+          dueDate: finalDate || undefined,
           projectId: selectedProjectId,
         });
       } else {
         await create({
-          title: title.trim(),
+          title: finalTitle,
           description: description.trim() || undefined,
-          dueDate: dueDate || undefined,
+          dueDate: finalDate || undefined,
           projectId: selectedProjectId,
         });
       }
@@ -62,7 +84,8 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="O que precisa ser feito?"
+            onBlur={() => applyNlp(title, dueDate)}
+            placeholder="O que precisa ser feito? (ex.: hoje FUP cliente)"
             className="w-full px-3 py-2 bg-surface border border-border rounded-md text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
           />
         </div>

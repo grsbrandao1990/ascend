@@ -175,6 +175,19 @@ export const uncomplete = mutation({
   },
 });
 
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    return tasks.filter((t) => !t.deleted && !t.completed);
+  },
+});
+
 export const search = query({
   args: {
     text: v.optional(v.string()),
