@@ -2,13 +2,14 @@
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
 
 export default function TodayPage() {
   const tasks = useQuery(api.tasks.listToday);
   const [showForm, setShowForm] = useState(false);
+  const [doneExpanded, setDoneExpanded] = useState(true);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -54,10 +55,18 @@ export default function TodayPage() {
 
       {completedToday && completedToday.length > 0 && (
         <div className="mt-8">
-          <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider mb-2 px-3">
+          <button
+            onClick={() => setDoneExpanded((v) => !v)}
+            className="flex items-center gap-1.5 px-3 mb-2 text-xs font-medium text-on-surface-variant uppercase tracking-wider hover:text-on-surface transition-colors"
+          >
+            {doneExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5" />
+            )}
             Concluídas hoje ({completedToday.length})
-          </p>
-          <TaskList tasks={completedToday} showProject />
+          </button>
+          {doneExpanded && <TaskList tasks={completedToday} showProject />}
         </div>
       )}
 

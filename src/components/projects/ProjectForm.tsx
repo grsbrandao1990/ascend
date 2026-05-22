@@ -5,12 +5,8 @@ import { api } from "@convex/_generated/api";
 import { Dialog } from "@/components/ui/Dialog";
 
 const PROJECT_COLORS = [
-  "#7C5CFC",
-  "#2DD4BF",
-  "#4ADE80",
-  "#F5A623",
-  "#F2555A",
-  "#60A5FA",
+  "#7C5CFC", "#A78BFA", "#E879F9", "#EC4899", "#F43F5E", "#FB923C", "#FBBF24",
+  "#4ADE80", "#34D399", "#2DD4BF", "#38BDF8", "#60A5FA", "#F5A623", "#94A3B8",
 ];
 
 interface ProjectFormProps {
@@ -55,7 +51,7 @@ export function ProjectForm({ onClose }: ProjectFormProps) {
           <label className="block text-sm text-on-surface-variant mb-2">
             Cor
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {PROJECT_COLORS.map((c) => (
               <button
                 key={c}

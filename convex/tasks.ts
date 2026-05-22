@@ -74,6 +74,27 @@ export const remove = mutation({
   },
 });
 
+export const duplicate = mutation({
+  args: { id: v.id("tasks") },
+  handler: async (ctx, { id }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(id);
+    if (!task || task.userId !== userId) throw new Error("Not found");
+    return await ctx.db.insert("tasks", {
+      userId,
+      projectId: task.projectId,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      recurrence: task.recurrence,
+      completed: false,
+      deleted: false,
+      createdAt: Date.now(),
+    });
+  },
+});
+
 export const get = query({
   args: { id: v.id("tasks") },
   handler: async (ctx, { id }) => {
