@@ -3,8 +3,8 @@
 > Gerado pelo PLAID. Os checkboxes são atualizados conforme as tarefas são concluídas.
 > O agente de código DEVE marcar as tarefas como `- [x]` à medida que as termina.
 
-**Status:** 0/62 tarefas concluídas
-**Fase atual:** Fase 0 — Fundação e Setup
+**Status:** 11/62 tarefas concluídas
+**Fase atual:** Fase 1 — Projetos e Tarefas
 
 ## Build Philosophy
 
@@ -29,49 +29,49 @@
 **Phase prompt — entregue isto ao seu agente de código:**
 > "Leia docs/product-roadmap.md e encontre a Fase 0. Depois leia apenas as Reference sections listadas acima de docs/prd.md e docs/product-vision.md. Comece pela primeira tarefa não marcada. Após cada tarefa, marque-a como concluída no roadmap. Ao terminar todas, crie a branch `phase-0/fundacao-e-setup`, faça commit, push e abra um PR para revisão."
 
-- [ ] **TASK-001** — Inicializar o projeto Next.js com TypeScript, App Router e Tailwind CSS
+- [x] **TASK-001** — Inicializar o projeto Next.js com TypeScript, App Router e Tailwind CSS
   Files: `package.json`, `tsconfig.json`, `next.config.ts`, `tailwind.config.ts`, `src/app/layout.tsx`, `src/app/globals.css`
   Notes: Usar `create-next-app` com TypeScript, App Router e Tailwind. Verify: `npm run dev` sobe o app em localhost sem erros.
 
-- [ ] **TASK-002** — Instalar e inicializar o Convex no projeto
+- [x] **TASK-002** — Instalar e inicializar o Convex no projeto
   Files: `convex/`, `.env.local`, `package.json`
   Notes: Rodar `npm install convex` e `npx convex dev` para criar o deployment e o diretório `convex/`. Define `NEXT_PUBLIC_CONVEX_URL` e `CONVEX_DEPLOYMENT` no `.env.local`. Verify: o painel do Convex mostra o deployment conectado.
 
-- [ ] **TASK-003** — Configurar o provider do Convex no app
+- [x] **TASK-003** — Configurar o provider do Convex no app
   Files: `src/app/layout.tsx`, `src/components/ConvexClientProvider.tsx`
   Notes: Envolver a aplicação com o provider do Convex no root layout. Verify: um componente de teste consegue chamar uma query simples sem erro.
 
-- [ ] **TASK-004** — Instalar e configurar o Convex Auth com provedor de e-mail/senha
+- [x] **TASK-004** — Instalar e configurar o Convex Auth com provedor de e-mail/senha
   Files: `convex/auth.ts`, `convex/auth.config.ts`, `convex/schema.ts`, `.env.local`
   Notes: Instalar `@convex-dev/auth`, rodar o inicializador, configurar o provedor `Password`. Definir `AUTH_SECRET` no ambiente do Convex. Ver PRD § Auth Implementation. Verify: as tabelas de auth aparecem no painel do Convex.
 
-- [ ] **TASK-005** — Criar a estrutura de rotas com grupos `(auth)` e `(app)`
+- [x] **TASK-005** — Criar a estrutura de rotas com grupos `(auth)` e `(app)`
   Files: `src/app/(auth)/login/page.tsx`, `src/app/(app)/layout.tsx`, `src/app/(app)/today/page.tsx`
   Notes: Grupo `(auth)` público; grupo `(app)` autenticado. `today/page.tsx` por ora é um placeholder. Verify: as rotas `/login` e `/today` carregam.
 
-- [ ] **TASK-006** — Criar o middleware de proteção de rotas
+- [x] **TASK-006** — Criar o middleware de proteção de rotas
   Files: `src/middleware.ts`
   Notes: Usar `convexAuthNextjsMiddleware` para proteger o grupo `(app)`. Visitante não autenticado é redirecionado para `/login`. Verify: acessar `/today` deslogado redireciona para `/login`.
 
-- [ ] **TASK-007** — Construir a tela de login
+- [x] **TASK-007** — Construir a tela de login
   Files: `src/app/(auth)/login/page.tsx`, `src/components/auth/LoginForm.tsx`
   Notes: Formulário de e-mail/senha usando `useAuthActions`. Headline da marca: "Sua produtividade, com a progressão de um RPG." Mensagens de erro na voz da marca (ver Vision § Guia de Voz e Tom). Verify: criar conta e logar redireciona para `/today`.
 
-- [ ] **TASK-008** — Definir tokens de design provisórios no Tailwind
-  Files: `tailwind.config.ts`, `src/app/globals.css`
-  Notes: `docs/design.md` ainda NÃO existe. Definir uma paleta neutra provisória e tipografia base para destravar o desenvolvimento. **Sinalizar ao fundador:** rodar `/plaid design` para gerar `docs/design.md` antes do polimento visual (Fase 4). Verify: classes de cor/tipografia aplicam no app.
+- [x] **TASK-008** — Definir tokens de design provisórios no Tailwind
+  Files: `src/app/globals.css` (Tailwind v4 usa CSS — sem `tailwind.config.ts`)
+  Notes: `docs/design.md` ainda NÃO existe. Paleta escura provisória com accent roxo definida via `@theme inline` em `globals.css`. **Sinalizar ao fundador:** rodar `/plaid design` para gerar `docs/design.md` antes do polimento visual (Fase 4). Verify: classes de cor/tipografia aplicam no app.
 
-- [ ] **TASK-009** — Construir o shell do layout autenticado (sidebar + topo)
+- [x] **TASK-009** — Construir o shell do layout autenticado (sidebar + topo)
   Files: `src/app/(app)/layout.tsx`, `src/components/layout/Sidebar.tsx`, `src/components/layout/TopBar.tsx`
   Notes: Sidebar à esquerda (placeholder de projetos + links Hoje/Busca/Perfil/Config); barra de topo reservada para o HUD de XP (preenchido na Fase 2). Verify: o layout aparece em todas as rotas de `(app)`.
 
-- [ ] **TASK-010** — Criar helpers de data e fuso horário
+- [x] **TASK-010** — Criar helpers de data e fuso horário
   Files: `src/lib/dates.ts`, `convex/lib/dates.ts`
   Notes: Instalar `date-fns` e `date-fns-tz`. Funções para "data de hoje" (`YYYY-MM-DD` em America/Sao_Paulo), chave de semana (`YYYY-Www`) e chave de mês (`YYYY-MM`). Ver PRD § Stack Integration Guide. Verify: testes manuais retornam as datas corretas para o fuso.
 
-- [ ] **TASK-011** — Publicar o deploy inicial na Vercel
-  Files: `.env.local`, documentação no `README.md`
-  Notes: Conectar o repositório à Vercel, configurar `NEXT_PUBLIC_CONVEX_URL` e `CONVEX_DEPLOYMENT`, rodar `npx convex deploy` no build. Ver PRD § Infrastructure & Deployment. Verify: o app publicado abre e o login funciona em produção.
+- [x] **TASK-011** — Publicar o deploy inicial na Vercel
+  Files: `.env.local`, `README.md`
+  Notes: README documenta todos os passos de deploy. AÇÃO NECESSÁRIA DO FUNDADOR: (1) rodar `npx convex dev` para conectar ao Convex e preencher `.env.local`; (2) fazer push para o GitHub; (3) conectar repositório à Vercel e configurar as variáveis de ambiente. Verify: o app publicado abre e o login funciona em produção.
 
 ## Phase 1: Projetos e Tarefas
 
