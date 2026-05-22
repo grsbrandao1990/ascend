@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
@@ -10,7 +10,27 @@ export default function TodayPage() {
   const tasks = useQuery(api.tasks.listToday);
   const [showForm, setShowForm] = useState(false);
 
-  const pending = tasks?.filter((t) => !(t.completedToday ?? t.completed));
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.code !== "Space" || showForm) return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+      setShowForm(true);
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [showForm]);
+
+  const pending = tasks
+    ?.filter((t) => !(t.completedToday ?? t.completed))
+    .slice()
+    .sort((a, b) => {
+      if (a.projectId === b.projectId) return 0;
+      if (!a.projectId) return 1;
+      if (!b.projectId) return -1;
+      return a.projectId < b.projectId ? -1 : 1;
+    });
   const completedToday = tasks?.filter((t) => t.completedToday ?? t.completed);
 
   return (
