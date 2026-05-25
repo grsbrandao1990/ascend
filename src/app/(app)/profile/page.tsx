@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { XpBar } from "@/components/game/XpBar";
 import { LevelBadge } from "@/components/game/LevelBadge";
+import { WeeklyChart } from "@/components/game/WeeklyChart";
 
 interface GoalCardProps {
   label: string;
@@ -60,6 +61,7 @@ function StatCard({ label, value }: StatCardProps) {
 
 export default function ProfilePage() {
   const stats = useQuery(api.stats.get);
+  const weekly = useQuery(api.stats.weeklyBreakdown);
 
   if (stats === undefined) {
     return (
@@ -122,6 +124,18 @@ export default function ProfilePage() {
           />
         </div>
       </div>
+
+      {/* Weekly performance chart */}
+      {weekly && (
+        <div>
+          <h2 className="text-sm font-medium text-on-surface-variant uppercase tracking-wider mb-4">
+            Performance — últimas 6 semanas
+          </h2>
+          <div className="bg-surface rounded-xl p-4">
+            <WeeklyChart weeks={weekly.weeks} maxTotal={weekly.maxTotal} />
+          </div>
+        </div>
+      )}
 
       {/* Stats grid */}
       <div>
