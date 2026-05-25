@@ -7,15 +7,18 @@ import { awardXpForCompletion, reverseXpForTask } from "./gamification";
 import { XP_PER_TASK } from "./gameConfig";
 import { recurrenceValidator, occursOnDate } from "./recurrence";
 
+const priorityValidator = v.optional(v.union(v.literal("p1"), v.literal("p2"), v.literal("p3")));
+
 export const create = mutation({
   args: {
     projectId: v.optional(v.id("projects")),
     title: v.string(),
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
+    priority: priorityValidator,
     recurrence: v.optional(recurrenceValidator),
   },
-  handler: async (ctx, { projectId, title, description, dueDate, recurrence }) => {
+  handler: async (ctx, { projectId, title, description, dueDate, priority, recurrence }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     return await ctx.db.insert("tasks", {
@@ -24,6 +27,7 @@ export const create = mutation({
       title,
       description,
       dueDate: recurrence ? undefined : dueDate,
+      priority,
       recurrence,
       completed: false,
       deleted: false,
@@ -39,10 +43,12 @@ export const update = mutation({
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
     projectId: v.optional(v.id("projects")),
+    priority: priorityValidator,
+    clearPriority: v.optional(v.boolean()),
     recurrence: v.optional(recurrenceValidator),
     clearRecurrence: v.optional(v.boolean()),
   },
-  handler: async (ctx, { id, title, description, dueDate, projectId, recurrence, clearRecurrence }) => {
+  handler: async (ctx, { id, title, description, dueDate, projectId, priority, clearPriority, recurrence, clearRecurrence }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     const task = (await ctx.db.get(id)) as Doc<"tasks"> | null;
@@ -52,9 +58,11 @@ export const update = mutation({
     if (description !== undefined) patch.description = description;
     if (dueDate !== undefined) patch.dueDate = dueDate;
     if (projectId !== undefined) patch.projectId = projectId;
+    if (priority !== undefined) patch.priority = priority;
+    if (clearPriority) patch.priority = undefined;
     if (recurrence !== undefined) {
       patch.recurrence = recurrence;
-      patch.dueDate = undefined; // recorrente não tem data avulsa
+      patch.dueDate = undefined;
     }
     if (clearRecurrence) {
       patch.recurrence = undefined;
@@ -87,6 +95,7 @@ export const duplicate = mutation({
       title: task.title,
       description: task.description,
       dueDate: task.dueDate,
+      priority: task.priority,
       recurrence: task.recurrence,
       completed: false,
       deleted: false,
