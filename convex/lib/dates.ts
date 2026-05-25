@@ -49,3 +49,19 @@ export function monthKeyInSP(): string {
   const month = d.getUTCMonth() + 1;
   return `${d.getUTCFullYear()}-${String(month).padStart(2, "0")}`;
 }
+
+export function nWeeksAgoStart(n: number): string {
+  const d = nowInSP();
+  const day = d.getUTCDay();
+  const monday = day === 0 ? 6 : day - 1;
+  d.setUTCDate(d.getUTCDate() - monday - n * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+export function nWeeksAgoEnd(n: number): string {
+  const d = nowInSP();
+  const day = d.getUTCDay();
+  const monday = day === 0 ? 6 : day - 1;
+  d.setUTCDate(d.getUTCDate() - monday - n * 7 + 6);
+  return d.toISOString().slice(0, 10);
+}
