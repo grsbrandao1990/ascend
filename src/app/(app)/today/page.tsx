@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState, useEffect } from "react";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { priorityRank } from "@/lib/nlpPriority";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
 
@@ -27,10 +28,14 @@ export default function TodayPage() {
     ?.filter((t) => !(t.completedToday ?? t.completed))
     .slice()
     .sort((a, b) => {
-      if (a.projectId === b.projectId) return 0;
-      if (!a.projectId) return 1;
-      if (!b.projectId) return -1;
-      return a.projectId < b.projectId ? -1 : 1;
+      // Agrupar por projeto
+      if (a.projectId !== b.projectId) {
+        if (!a.projectId) return 1;
+        if (!b.projectId) return -1;
+        return a.projectId < b.projectId ? -1 : 1;
+      }
+      // Dentro do projeto, ordenar por prioridade
+      return priorityRank(a.priority) - priorityRank(b.priority);
     });
   const completedToday = tasks?.filter((t) => t.completedToday ?? t.completed);
 

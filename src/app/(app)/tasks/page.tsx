@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
 import { todayString } from "@/lib/dates";
+import { priorityRank } from "@/lib/nlpPriority";
 
 type SortMode = "date" | "project";
 
@@ -18,6 +19,10 @@ export default function TasksPage() {
   const today = todayString();
 
   const projectMap = new Map(projects?.map((p) => [p._id, p]) ?? []);
+
+  function byPriority<T extends { priority?: string }>(items: T[]): T[] {
+    return [...items].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority));
+  }
 
   return (
     <div>
@@ -63,7 +68,7 @@ export default function TasksPage() {
               <p className="text-xs font-medium text-warning uppercase tracking-wider mb-2 px-3">
                 Vencidas ({tasks.filter((t) => t.dueDate && t.dueDate < today).length})
               </p>
-              <TaskList tasks={tasks.filter((t) => t.dueDate && t.dueDate < today)} />
+              <TaskList tasks={byPriority(tasks.filter((t) => t.dueDate && t.dueDate < today))} />
             </section>
           )}
 
@@ -75,7 +80,7 @@ export default function TasksPage() {
               })()}
             </p>
             <TaskList
-              tasks={tasks?.filter((t) => t.dueDate && t.dueDate >= today)}
+              tasks={tasks ? byPriority(tasks.filter((t) => t.dueDate && t.dueDate >= today)) : undefined}
               emptyMessage="Nenhuma tarefa com data futura."
             />
           </section>
@@ -85,7 +90,7 @@ export default function TasksPage() {
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider mb-2 px-3">
                 Sem data ({tasks.filter((t) => !t.dueDate).length})
               </p>
-              <TaskList tasks={tasks.filter((t) => !t.dueDate)} />
+              <TaskList tasks={byPriority(tasks.filter((t) => !t.dueDate))} />
             </section>
           )}
         </>
@@ -121,7 +126,7 @@ export default function TasksPage() {
                           {project?.name ?? "Projeto desconhecido"} ({projectTasks.length})
                         </p>
                       </div>
-                      <TaskList tasks={projectTasks} showProject={false} />
+                      <TaskList tasks={byPriority(projectTasks)} showProject={false} />
                     </section>
                   );
                 })}
@@ -131,7 +136,7 @@ export default function TasksPage() {
                     <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider mb-2 px-3">
                       Sem projeto ({withoutProject.length})
                     </p>
-                    <TaskList tasks={withoutProject} showProject={false} />
+                    <TaskList tasks={byPriority(withoutProject)} showProject={false} />
                   </section>
                 )}
 

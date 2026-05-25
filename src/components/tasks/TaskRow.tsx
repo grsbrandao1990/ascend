@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Copy, Pencil, Repeat2, Trash2 } from "lucide-react";
+import { Copy, Flag, Pencil, Repeat2, Trash2 } from "lucide-react";
 import { isOverdue, isToday, todayString } from "@/lib/dates";
+import { PRIORITY_CONFIG } from "@/lib/nlpPriority";
 import { TaskForm } from "./TaskForm";
 import { XpToast } from "@/components/game/XpToast";
 import { CelebrationModal, type CelebrationVariant } from "@/components/game/CelebrationModal";
@@ -91,15 +92,23 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
         </button>
 
         <div className="flex-1 min-w-0">
-          <p
-            className={`text-sm ${
-              isCompleted
-                ? "text-on-surface-variant line-through"
-                : "text-on-surface"
-            }`}
-          >
-            {task.title}
-          </p>
+          <div className="flex items-center gap-1.5">
+            {task.priority && (
+              <Flag
+                className="w-3 h-3 flex-shrink-0"
+                style={{ color: PRIORITY_CONFIG[task.priority].color }}
+              />
+            )}
+            <p
+              className={`text-sm ${
+                isCompleted
+                  ? "text-on-surface-variant line-through"
+                  : "text-on-surface"
+              }`}
+            >
+              {task.title}
+            </p>
+          </div>
 
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             {showProject && project && (

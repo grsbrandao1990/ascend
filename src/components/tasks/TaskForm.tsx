@@ -3,8 +3,10 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
+import { Flag } from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { parseNlpDate } from "@/lib/nlpDate";
+import { parsePriority, PRIORITY_CONFIG, type Priority } from "@/lib/nlpPriority";
 import type { TodayTask } from "./TaskList";
 
 interface TaskFormProps {
@@ -25,11 +27,14 @@ const WEEKDAYS = [
   { label: "Sáb", value: 6 },
 ];
 
+const PRIORITIES: Priority[] = ["p1", "p2", "p3"];
+
 export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   const isEditing = task != null;
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [dueDate, setDueDate] = useState(task?.dueDate ?? "");
+  const [priority, setPriority] = useState<Priority | null>(task?.priority ?? null);
   const [selectedProjectId, setSelectedProjectId] = useState<
     Id<"projects"> | undefined
   >(task?.projectId ?? projectId);
@@ -59,12 +64,25 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   }
 
   function applyNlp(currentTitle: string, currentDate: string) {
-    if (currentDate || recurring) return;
-    const { cleanTitle, date } = parseNlpDate(currentTitle);
-    if (date) {
-      setTitle(cleanTitle);
-      setDueDate(date);
+    if (recurring) return;
+    let working = currentTitle;
+
+    const { cleanTitle: afterPriority, priority: detected } = parsePriority(working);
+    if (detected && !priority) {
+      setPriority(detected);
+      working = afterPriority;
     }
+
+    if (!currentDate) {
+      const { cleanTitle, date } = parseNlpDate(working);
+      if (date) {
+        setTitle(cleanTitle);
+        setDueDate(date);
+        return;
+      }
+    }
+
+    if (working !== currentTitle) setTitle(working);
   }
 
   function buildRecurrence() {
@@ -80,11 +98,20 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
 
     let finalTitle = title.trim();
     let finalDate = dueDate;
-    if (!finalDate && !recurring) {
-      const { cleanTitle, date } = parseNlpDate(finalTitle);
-      if (date) {
-        finalTitle = cleanTitle;
-        finalDate = date;
+    let finalPriority = priority;
+
+    if (!recurring) {
+      const { cleanTitle: t2, priority: detected } = parsePriority(finalTitle);
+      if (detected && !finalPriority) {
+        finalPriority = detected;
+        finalTitle = t2;
+      }
+      if (!finalDate) {
+        const { cleanTitle, date } = parseNlpDate(finalTitle);
+        if (date) {
+          finalTitle = cleanTitle;
+          finalDate = date;
+        }
       }
     }
 
@@ -99,6 +126,8 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
           description: description.trim() || undefined,
           dueDate: recurrence ? undefined : finalDate || undefined,
           projectId: selectedProjectId,
+          priority: finalPriority ?? undefined,
+          clearPriority: finalPriority === null && task.priority != null ? true : undefined,
           recurrence,
           clearRecurrence: !recurring && task.recurrence != null ? true : undefined,
         });
@@ -108,6 +137,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
           description: description.trim() || undefined,
           dueDate: recurrence ? undefined : finalDate || undefined,
           projectId: selectedProjectId,
+          priority: finalPriority ?? undefined,
           recurrence,
         });
       }
@@ -133,9 +163,38 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => applyNlp(title, dueDate)}
-            placeholder="O que precisa ser feito? (ex.: hoje FUP cliente)"
+            placeholder="O que precisa ser feito? (ex.: hoje p1 FUP cliente)"
             className="w-full px-3 py-2 bg-surface border border-border rounded-md text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
           />
+        </div>
+
+        {/* Prioridade */}
+        <div>
+          <label className="block text-sm text-on-surface-variant mb-1.5">
+            Prioridade
+          </label>
+          <div className="flex gap-2">
+            {PRIORITIES.map((p) => {
+              const { label, color } = PRIORITY_CONFIG[p];
+              const selected = priority === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPriority(selected ? null : p)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border"
+                  style={
+                    selected
+                      ? { color, borderColor: color, backgroundColor: `${color}18` }
+                      : { borderColor: "var(--border)", color: "var(--on-surface-variant)" }
+                  }
+                >
+                  <Flag className="w-3 h-3" style={{ color: selected ? color : undefined }} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Descrição */}
