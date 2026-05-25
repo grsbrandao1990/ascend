@@ -6,7 +6,7 @@ import { Copy, Pencil, Repeat2, Trash2 } from "lucide-react";
 import { isOverdue, isToday, todayString } from "@/lib/dates";
 import { TaskForm } from "./TaskForm";
 import { XpToast } from "@/components/game/XpToast";
-import { LevelUpOverlay } from "@/components/game/LevelUpOverlay";
+import { CelebrationModal, type CelebrationVariant } from "@/components/game/CelebrationModal";
 import type { TodayTask } from "./TaskList";
 
 interface TaskRowProps {
@@ -14,13 +14,6 @@ interface TaskRowProps {
   showProject?: boolean;
 }
 
-interface GamificationResult {
-  xpAwarded: number;
-  goalBonuses: Array<{ goalType: "daily" | "weekly" | "monthly"; xp: number }>;
-  leveledUp: boolean;
-  newLevel: number;
-  totalXp: number;
-}
 
 export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const complete = useMutation(api.tasks.complete);
@@ -29,8 +22,10 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const duplicate = useMutation(api.tasks.duplicate);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [toast, setToast] = useState<GamificationResult | null>(null);
-  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [xpToast, setXpToast] = useState<number | null>(null);
+  const [celebrationQueue, setCelebrationQueue] = useState<
+    Array<{ variant: CelebrationVariant; level?: number }>
+  >([]);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const project = useQuery(
     api.projects.getById,
@@ -50,8 +45,15 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
       } else {
         const result = await complete({ id: task._id, occurrenceDate });
         if (result.xpAwarded > 0) {
-          setToast(result);
-          if (result.leveledUp) setShowLevelUp(true);
+          setXpToast(result.xpAwarded);
+          const queue: Array<{ variant: CelebrationVariant; level?: number }> = [];
+          for (const b of result.goalBonuses) {
+            if (b.goalType === "daily") queue.push({ variant: "daily" });
+            else if (b.goalType === "weekly") queue.push({ variant: "weekly" });
+            else if (b.goalType === "monthly") queue.push({ variant: "monthly" });
+          }
+          if (result.leveledUp) queue.push({ variant: "levelup", level: result.newLevel });
+          if (queue.length > 0) setCelebrationQueue(queue);
         }
       }
     } catch {
@@ -183,18 +185,15 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
 
       {editing && <TaskForm task={task} onClose={() => setEditing(false)} />}
 
-      {toast && (
-        <XpToast
-          xpAwarded={toast.xpAwarded}
-          goalBonuses={toast.goalBonuses}
-          onDismiss={() => setToast(null)}
-        />
+      {xpToast != null && (
+        <XpToast xpAwarded={xpToast} onDismiss={() => setXpToast(null)} />
       )}
 
-      {showLevelUp && toast && (
-        <LevelUpOverlay
-          newLevel={toast.newLevel}
-          onDismiss={() => setShowLevelUp(false)}
+      {celebrationQueue.length > 0 && (
+        <CelebrationModal
+          variant={celebrationQueue[0].variant}
+          level={celebrationQueue[0].level}
+          onDismiss={() => setCelebrationQueue((q) => q.slice(1))}
         />
       )}
     </>
