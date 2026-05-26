@@ -1,9 +1,11 @@
 "use client";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
+import Image from "next/image";
 import { XpBar } from "@/components/game/XpBar";
 import { LevelBadge } from "@/components/game/LevelBadge";
 import { WeeklyChart } from "@/components/game/WeeklyChart";
+import { getBadgeForLevel } from "@/lib/levelBadge";
 
 interface GoalCardProps {
   label: string;
@@ -91,15 +93,52 @@ export default function ProfilePage() {
       <h1 className="text-xl font-semibold text-on-surface">Perfil</h1>
 
       {/* Level + XP */}
-      <div className="bg-surface rounded-xl p-5 flex items-center gap-4">
-        <LevelBadge level={stats.level} />
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <p className="text-sm text-on-surface-variant">
-            Nível {stats.level}
-          </p>
-          <XpBar xpInLevel={stats.xpInLevel} xpNeeded={stats.xpNeeded} />
-        </div>
-      </div>
+      {(() => {
+        const badge = getBadgeForLevel(stats.level);
+        return (
+          <>
+            <div className="bg-surface rounded-xl p-5 flex items-center gap-4">
+              <LevelBadge level={stats.level} />
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <p className="text-sm text-on-surface-variant">
+                  Nível {stats.level}{" "}
+                  <span className="text-on-surface font-medium">· {badge.name}</span>
+                </p>
+                <XpBar xpInLevel={stats.xpInLevel} xpNeeded={stats.xpNeeded} />
+              </div>
+              <Image
+                src={badge.file}
+                alt={badge.name}
+                width={64}
+                height={64}
+                className="flex-shrink-0"
+              />
+            </div>
+
+            <div className="bg-surface rounded-xl p-5 flex items-center gap-5">
+              <Image
+                src={badge.file}
+                alt={badge.name}
+                width={100}
+                height={100}
+                className="flex-shrink-0"
+              />
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider">
+                  Rank atual
+                </p>
+                <p className="text-lg font-bold text-on-surface">{badge.name}</p>
+                <p className="text-sm text-on-surface-variant leading-relaxed">
+                  {badge.description}
+                </p>
+                <p className="text-xs text-on-surface-variant">
+                  Níveis {badge.minLevel}–{badge.maxLevel}
+                </p>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Goals */}
       <div>

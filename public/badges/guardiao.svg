@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250" width="100%" height="100%">
+    <defs>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&amp;display=swap');
+            .badge-title { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: 2px; fill: #F4F4F8; text-anchor: middle; }
+            .badge-level { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10px; letter-spacing: 1px; fill: #2DD4BF; text-anchor: middle; opacity: 0.85; }
+            .glow-effect { filter: drop-shadow(0px 0px 8px rgba(45, 212, 191, 0.5)); }
+            .primary-glow { filter: drop-shadow(0px 4px 12px rgba(124, 92, 252, 0.4)); }
+        </style>
+        <linearGradient id="grad-primary-03" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#9277FF" />
+            <stop offset="100%" stop-color="#7C5CFC" />
+        </linearGradient>
+        <linearGradient id="grad-accent-03" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#2DD4BF" />
+            <stop offset="100%" stop-color="#14B8A6" />
+        </linearGradient>
+        <linearGradient id="grad-surface-03" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#24243A" />
+            <stop offset="100%" stop-color="#1A1A2A" />
+        </linearGradient>
+    </defs>
+    <g class="primary-glow">
+        <polygon points="125,25 210,75 210,175 125,225 40,175 40,75" fill="url(#grad-primary-03)" />
+    </g>
+    <polygon points="125,34 200,78 200,172 125,216 50,172 50,78" fill="url(#grad-surface-03)" />
+    <polygon points="125,40 194,80 194,170 125,210 56,170 56,80" fill="none" stroke="url(#grad-accent-03)" stroke-width="4" class="glow-effect" />
+    <polygon points="125,48 184,82 184,168 125,202 66,168 66,82" fill="#24243A" stroke="#2E2E44" stroke-width="1" />
+    <g transform="translate(105, 90)">
+        <path d="M 5,5 L 35,5 L 35,20 C 35,35 20,45 20,45 C 20,45 5,35 5,20 Z" fill="none" stroke="#F4F4F8" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M 20,5 L 20,43" stroke="#2DD4BF" stroke-width="2"/>
+    </g>
+    <text x="125" y="172" class="badge-title">GUARDIAO</text>
+    <text x="125" y="188" class="badge-level">LVL 11 - 15</text>
+</svg>
