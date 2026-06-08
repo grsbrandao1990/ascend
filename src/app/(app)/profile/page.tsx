@@ -6,6 +6,7 @@ import { XpBar } from "@/components/game/XpBar";
 import { LevelBadge } from "@/components/game/LevelBadge";
 import { WeeklyChart } from "@/components/game/WeeklyChart";
 import { getBadgeForLevel } from "@/lib/levelBadge";
+import { PieChart } from "@/components/game/PieChart";
 
 interface GoalCardProps {
   label: string;
@@ -64,6 +65,7 @@ function StatCard({ label, value }: StatCardProps) {
 export default function ProfilePage() {
   const stats = useQuery(api.stats.get);
   const weekly = useQuery(api.stats.weeklyBreakdown);
+  const breakdown = useQuery(api.stats.projectBreakdown);
 
   if (stats === undefined) {
     return (
@@ -172,6 +174,18 @@ export default function ProfilePage() {
           </h2>
           <div className="bg-surface rounded-xl p-4">
             <WeeklyChart weeks={weekly.weeks} maxTotal={weekly.maxTotal} />
+          </div>
+        </div>
+      )}
+
+      {/* Project breakdown pie chart */}
+      {breakdown && (
+        <div>
+          <h2 className="text-sm font-medium text-on-surface-variant uppercase tracking-wider mb-4">
+            Por projeto — últimas 6 semanas
+          </h2>
+          <div className="bg-surface rounded-xl p-5">
+            <PieChart slices={breakdown.slices} total={breakdown.total} />
           </div>
         </div>
       )}

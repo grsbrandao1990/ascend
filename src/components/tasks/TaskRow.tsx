@@ -6,8 +6,7 @@ import { Copy, Flag, Pencil, Repeat2, Trash2 } from "lucide-react";
 import { isOverdue, isToday, todayString } from "@/lib/dates";
 import { PRIORITY_CONFIG } from "@/lib/nlpPriority";
 import { TaskForm } from "./TaskForm";
-import { XpToast } from "@/components/game/XpToast";
-import { CelebrationModal, type CelebrationVariant } from "@/components/game/CelebrationModal";
+import { useGamification } from "@/contexts/GamificationContext";
 import type { TodayTask } from "./TaskList";
 
 interface TaskRowProps {
@@ -15,25 +14,20 @@ interface TaskRowProps {
   showProject?: boolean;
 }
 
-
 export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const complete = useMutation(api.tasks.complete);
   const uncomplete = useMutation(api.tasks.uncomplete);
   const remove = useMutation(api.tasks.remove);
   const duplicate = useMutation(api.tasks.duplicate);
+  const { handleTaskCompleted } = useGamification();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [xpToast, setXpToast] = useState<number | null>(null);
-  const [celebrationQueue, setCelebrationQueue] = useState<
-    Array<{ variant: CelebrationVariant; level?: number }>
-  >([]);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const project = useQuery(
     api.projects.getById,
     showProject && task.projectId ? { id: task.projectId } : "skip"
   );
 
-  // Para tarefas recorrentes, o estado "concluída" vem do campo sintético completedToday
   const isCompleted = task.completedToday ?? task.completed;
   const overdue = task.dueDate != null && !isCompleted && isOverdue(task.dueDate);
   const occurrenceDate = task.recurrence ? todayString() : undefined;
@@ -45,17 +39,7 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
         await uncomplete({ id: task._id, occurrenceDate });
       } else {
         const result = await complete({ id: task._id, occurrenceDate });
-        if (result.xpAwarded > 0) {
-          setXpToast(result.xpAwarded);
-          const queue: Array<{ variant: CelebrationVariant; level?: number }> = [];
-          for (const b of result.goalBonuses) {
-            if (b.goalType === "daily") queue.push({ variant: "daily" });
-            else if (b.goalType === "weekly") queue.push({ variant: "weekly" });
-            else if (b.goalType === "monthly") queue.push({ variant: "monthly" });
-          }
-          if (result.leveledUp) queue.push({ variant: "levelup", level: result.newLevel });
-          if (queue.length > 0) setCelebrationQueue(queue);
-        }
+        handleTaskCompleted(result);
       }
     } catch {
       setToggleError("Não consegui atualizar. Tenta de novo.");
@@ -193,18 +177,6 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
       )}
 
       {editing && <TaskForm task={task} onClose={() => setEditing(false)} />}
-
-      {xpToast != null && (
-        <XpToast xpAwarded={xpToast} onDismiss={() => setXpToast(null)} />
-      )}
-
-      {celebrationQueue.length > 0 && (
-        <CelebrationModal
-          variant={celebrationQueue[0].variant}
-          level={celebrationQueue[0].level}
-          onDismiss={() => setCelebrationQueue((q) => q.slice(1))}
-        />
-      )}
     </>
   );
 }
