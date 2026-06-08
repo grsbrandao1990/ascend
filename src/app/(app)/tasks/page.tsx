@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
@@ -19,6 +19,18 @@ export default function TasksPage() {
   const today = todayString();
 
   const projectMap = new Map(projects?.map((p) => [p._id, p]) ?? []);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.code !== "Space" || showForm) return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+      setShowForm(true);
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [showForm]);
 
   function byPriority<T extends { priority?: string }>(items: T[]): T[] {
     return [...items].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority));
