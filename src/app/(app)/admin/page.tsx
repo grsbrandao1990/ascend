@@ -136,6 +136,57 @@ function UserCard({
   );
 }
 
+function BootstrapMasterForm() {
+  const bootstrap = useMutation(api.userProfiles.bootstrapMaster);
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleBootstrap(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await bootstrap({ displayName: name.trim() });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao configurar master");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      <h1 className="text-xl font-semibold text-on-surface mb-6">Equipe</h1>
+      <div className="bg-surface rounded-xl p-5 max-w-sm space-y-4">
+        <div>
+          <p className="text-sm font-medium text-on-surface mb-1">Configurar conta master</p>
+          <p className="text-xs text-on-surface-variant">
+            Nenhum master existe ainda. Configure seu perfil para ter acesso total.
+          </p>
+        </div>
+        <form onSubmit={handleBootstrap} className="space-y-3">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Seu nome de exibição"
+            className="w-full px-3 py-2 bg-surface-raised border border-border rounded-md text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary"
+          />
+          {error && <p className="text-xs text-error">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading || !name.trim()}
+            className="w-full px-4 py-2 text-sm bg-primary text-on-primary rounded-md hover:bg-primary-hover disabled:opacity-50 transition-colors"
+          >
+            {loading ? "Configurando..." : "Tornar-me master"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const users = useQuery(api.userProfiles.listAll);
   const myProfile = useQuery(api.userProfiles.getMyProfile);
@@ -153,7 +204,11 @@ export default function AdminPage() {
     );
   }
 
-  if (!myProfile || myProfile.role !== "master") {
+  if (!myProfile) {
+    return <BootstrapMasterForm />;
+  }
+
+  if (myProfile.role !== "master") {
     return (
       <div>
         <h1 className="text-xl font-semibold text-on-surface mb-6">Equipe</h1>

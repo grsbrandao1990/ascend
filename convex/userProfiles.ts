@@ -64,6 +64,31 @@ export const listAll = query({
   },
 });
 
+// Bootstrap: any authenticated user can become master if no master exists yet
+export const bootstrapMaster = mutation({
+  args: { displayName: v.string() },
+  handler: async (ctx, { displayName }) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Not authenticated");
+
+    const allProfiles = await ctx.db.query("userProfiles").collect();
+    const hasMaster = allProfiles.some((p) => p.role === "master");
+    if (hasMaster) throw new Error("Master já existe");
+
+    const existing = allProfiles.find((p) => p.userId === authId);
+    if (existing) {
+      await ctx.db.patch(existing._id, { role: "master", displayName, managedUserIds: [] });
+    } else {
+      await ctx.db.insert("userProfiles", {
+        userId: authId,
+        displayName,
+        role: "master",
+        managedUserIds: [],
+      });
+    }
+  },
+});
+
 export const upsert = mutation({
   args: {
     targetUserId: v.optional(v.id("users")),
