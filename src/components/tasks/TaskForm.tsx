@@ -8,7 +8,6 @@ import { Dialog } from "@/components/ui/Dialog";
 import { parseNlpDate } from "@/lib/nlpDate";
 import { parsePriority, PRIORITY_CONFIG, type Priority } from "@/lib/nlpPriority";
 import type { TodayTask } from "./TaskList";
-import { Id } from "@convex/_generated/dataModel";
 
 interface TaskFormProps {
   task?: TodayTask;
