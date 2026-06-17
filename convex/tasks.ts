@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type QueryCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { todayInSP } from "./lib/dates";
 import { Doc, Id } from "./_generated/dataModel";
@@ -10,12 +10,12 @@ import { recurrenceValidator, occursOnDate } from "./recurrence";
 const priorityValidator = v.optional(v.union(v.literal("p1"), v.literal("p2"), v.literal("p3")));
 
 async function getVisibleTasks(
-  ctx: { db: { query: Function } },
+  ctx: QueryCtx,
   userId: Id<"users">
 ): Promise<Doc<"tasks">[]> {
-  const myProfile = await (ctx.db as any)
+  const myProfile = await ctx.db
     .query("userProfiles")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .withIndex("by_user", (q) => q.eq("userId", userId))
     .first();
 
   const isMaster = myProfile?.role === "master";
@@ -23,35 +23,33 @@ async function getVisibleTasks(
   const visibleUserIds = [userId, ...managedUserIds];
 
   if (isMaster) {
-    return (ctx.db as any).query("tasks").collect();
+    return ctx.db.query("tasks").collect();
   }
 
   const seen = new Set<string>();
   const tasks: Doc<"tasks">[] = [];
 
-  // Tasks created by visible users
   for (const uid of visibleUserIds) {
-    const rows: Doc<"tasks">[] = await (ctx.db as any)
+    const rows = await ctx.db
       .query("tasks")
-      .withIndex("by_user", (q: any) => q.eq("userId", uid))
+      .withIndex("by_user", (q) => q.eq("userId", uid))
       .collect();
     for (const t of rows) {
-      if (!seen.has(t._id as string)) {
-        seen.add(t._id as string);
+      if (!seen.has(t._id)) {
+        seen.add(t._id);
         tasks.push(t);
       }
     }
   }
 
-  // Tasks assigned to visible users (may be created outside visible set)
   for (const uid of visibleUserIds) {
-    const rows: Doc<"tasks">[] = await (ctx.db as any)
+    const rows = await ctx.db
       .query("tasks")
-      .withIndex("by_assignee", (q: any) => q.eq("assigneeId", uid))
+      .withIndex("by_assignee", (q) => q.eq("assigneeId", uid))
       .collect();
     for (const t of rows) {
-      if (!seen.has(t._id as string)) {
-        seen.add(t._id as string);
+      if (!seen.has(t._id)) {
+        seen.add(t._id);
         tasks.push(t);
       }
     }

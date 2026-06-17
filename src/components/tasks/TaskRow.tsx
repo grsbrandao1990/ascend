@@ -8,7 +8,6 @@ import { PRIORITY_CONFIG } from "@/lib/nlpPriority";
 import { TaskForm } from "./TaskForm";
 import { useGamification } from "@/contexts/GamificationContext";
 import type { TodayTask } from "./TaskList";
-import { api } from "@convex/_generated/api";
 
 interface TaskRowProps {
   task: TodayTask;
