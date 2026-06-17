@@ -8,6 +8,7 @@ import { PRIORITY_CONFIG } from "@/lib/nlpPriority";
 import { TaskForm } from "./TaskForm";
 import { useGamification } from "@/contexts/GamificationContext";
 import type { TodayTask } from "./TaskList";
+import { api } from "@convex/_generated/api";
 
 interface TaskRowProps {
   task: TodayTask;
@@ -26,6 +27,10 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
   const project = useQuery(
     api.projects.getById,
     showProject && task.projectId ? { id: task.projectId } : "skip"
+  );
+  const assigneeProfile = useQuery(
+    api.userProfiles.getById,
+    task.assigneeId ? { userId: task.assigneeId } : "skip"
   );
 
   const isCompleted = task.completedToday ?? task.completed;
@@ -113,6 +118,16 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
                   : task.recurrence.type === "weekly"
                     ? "Semanal"
                     : "Mensal"}
+              </span>
+            )}
+
+            {assigneeProfile && (
+              <span
+                className="flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold flex-shrink-0"
+                style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+                title={assigneeProfile.displayName}
+              >
+                {assigneeProfile.displayName.charAt(0).toUpperCase()}
               </span>
             )}
 

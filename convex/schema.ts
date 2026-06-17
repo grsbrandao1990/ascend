@@ -19,6 +19,7 @@ export default defineSchema({
   tasks: defineTable({
     userId: v.id("users"),
     projectId: v.optional(v.id("projects")),
+    assigneeId: v.optional(v.id("users")),
     title: v.string(),
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
@@ -31,6 +32,7 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_project", ["projectId"])
+    .index("by_assignee", ["assigneeId"])
     .index("by_user_completed", ["userId", "completed"])
     .searchIndex("search_title", { searchField: "title", filterFields: ["userId"] }),
 
@@ -53,6 +55,13 @@ export default defineSchema({
     longestStreak: v.number(),
     lastCompletionDate: v.optional(v.string()),
     tasksCompleted: v.number(),
+  }).index("by_user", ["userId"]),
+
+  userProfiles: defineTable({
+    userId: v.id("users"),
+    displayName: v.string(),
+    role: v.string(),
+    managedUserIds: v.array(v.id("users")),
   }).index("by_user", ["userId"]),
 
   goalAwards: defineTable({

@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, List, Search, User, Settings } from "lucide-react";
+import { CalendarDays, List, Search, User, Settings, Users } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 import { ProjectList } from "@/components/projects/ProjectList";
 
 const navItems = [
@@ -14,6 +16,8 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const myProfile = useQuery(api.userProfiles.getMyProfile);
+  const isMaster = myProfile?.role === "master";
 
   return (
     <aside className="w-56 flex-shrink-0 border-r border-border bg-surface flex flex-col h-full">
@@ -44,6 +48,20 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {isMaster && (
+          <Link
+            href="/admin"
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
+              pathname === "/admin" || pathname.startsWith("/admin/")
+                ? "bg-primary text-on-primary font-medium"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-raised"
+            }`}
+          >
+            <Users className="w-4 h-4 flex-shrink-0" />
+            Equipe
+          </Link>
+        )}
 
         <ProjectList />
       </nav>
