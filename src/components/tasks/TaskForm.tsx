@@ -8,6 +8,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { parseNlpDate } from "@/lib/nlpDate";
 import { parsePriority, PRIORITY_CONFIG, type Priority } from "@/lib/nlpPriority";
 import type { TodayTask } from "./TaskList";
+import { Id } from "@convex/_generated/dataModel";
 
 interface TaskFormProps {
   task?: TodayTask;
@@ -35,6 +36,9 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   const [description, setDescription] = useState(task?.description ?? "");
   const [dueDate, setDueDate] = useState(task?.dueDate ?? "");
   const [priority, setPriority] = useState<Priority | null>(task?.priority ?? null);
+  const [assigneeId, setAssigneeId] = useState<Id<"users"> | undefined>(
+    task?.assigneeId ?? undefined
+  );
   const [selectedProjectId, setSelectedProjectId] = useState<
     Id<"projects"> | undefined
   >(task?.projectId ?? projectId);
@@ -56,6 +60,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   const create = useMutation(api.tasks.create);
   const update = useMutation(api.tasks.update);
   const projects = useQuery(api.projects.list);
+  const members = useQuery(api.userProfiles.listMembers);
 
   function toggleWeekday(day: number) {
     setWeekdays((prev) =>
@@ -126,6 +131,8 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
           description: description.trim() || undefined,
           dueDate: recurrence ? undefined : finalDate || undefined,
           projectId: selectedProjectId,
+          assigneeId: assigneeId ?? undefined,
+          clearAssignee: assigneeId === undefined && task.assigneeId != null ? true : undefined,
           priority: finalPriority ?? undefined,
           clearPriority: finalPriority === null && task.priority != null ? true : undefined,
           recurrence,
@@ -137,6 +144,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
           description: description.trim() || undefined,
           dueDate: recurrence ? undefined : finalDate || undefined,
           projectId: selectedProjectId,
+          assigneeId: assigneeId ?? undefined,
           priority: finalPriority ?? undefined,
           recurrence,
         });
@@ -196,6 +204,31 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
             })}
           </div>
         </div>
+
+        {/* Responsável — só aparece se há membros cadastrados */}
+        {members && members.length > 0 && (
+          <div>
+            <label className="block text-sm text-on-surface-variant mb-1">
+              Responsável
+            </label>
+            <select
+              value={assigneeId ?? ""}
+              onChange={(e) =>
+                setAssigneeId(
+                  e.target.value ? (e.target.value as Id<"users">) : undefined
+                )
+              }
+              className="w-full px-3 py-2 bg-surface border border-border rounded-md text-sm text-on-surface focus:outline-none focus:border-primary"
+            >
+              <option value="">Sem responsável</option>
+              {members.map((m) => (
+                <option key={m.userId} value={m.userId}>
+                  {m.displayName}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Descrição */}
         <div>

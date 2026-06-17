@@ -9,21 +9,74 @@ import { recurrenceValidator, occursOnDate } from "./recurrence";
 
 const priorityValidator = v.optional(v.union(v.literal("p1"), v.literal("p2"), v.literal("p3")));
 
+async function getVisibleTasks(
+  ctx: { db: { query: Function } },
+  userId: Id<"users">
+): Promise<Doc<"tasks">[]> {
+  const myProfile = await (ctx.db as any)
+    .query("userProfiles")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .first();
+
+  const isMaster = myProfile?.role === "master";
+  const managedUserIds: Id<"users">[] = myProfile?.managedUserIds ?? [];
+  const visibleUserIds = [userId, ...managedUserIds];
+
+  if (isMaster) {
+    return (ctx.db as any).query("tasks").collect();
+  }
+
+  const seen = new Set<string>();
+  const tasks: Doc<"tasks">[] = [];
+
+  // Tasks created by visible users
+  for (const uid of visibleUserIds) {
+    const rows: Doc<"tasks">[] = await (ctx.db as any)
+      .query("tasks")
+      .withIndex("by_user", (q: any) => q.eq("userId", uid))
+      .collect();
+    for (const t of rows) {
+      if (!seen.has(t._id as string)) {
+        seen.add(t._id as string);
+        tasks.push(t);
+      }
+    }
+  }
+
+  // Tasks assigned to visible users (may be created outside visible set)
+  for (const uid of visibleUserIds) {
+    const rows: Doc<"tasks">[] = await (ctx.db as any)
+      .query("tasks")
+      .withIndex("by_assignee", (q: any) => q.eq("assigneeId", uid))
+      .collect();
+    for (const t of rows) {
+      if (!seen.has(t._id as string)) {
+        seen.add(t._id as string);
+        tasks.push(t);
+      }
+    }
+  }
+
+  return tasks;
+}
+
 export const create = mutation({
   args: {
     projectId: v.optional(v.id("projects")),
+    assigneeId: v.optional(v.id("users")),
     title: v.string(),
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
     priority: priorityValidator,
     recurrence: v.optional(recurrenceValidator),
   },
-  handler: async (ctx, { projectId, title, description, dueDate, priority, recurrence }) => {
+  handler: async (ctx, { projectId, assigneeId, title, description, dueDate, priority, recurrence }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     return await ctx.db.insert("tasks", {
       userId,
       projectId,
+      assigneeId,
       title,
       description,
       dueDate: recurrence ? undefined : dueDate,
@@ -43,12 +96,14 @@ export const update = mutation({
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
     projectId: v.optional(v.id("projects")),
+    assigneeId: v.optional(v.id("users")),
+    clearAssignee: v.optional(v.boolean()),
     priority: priorityValidator,
     clearPriority: v.optional(v.boolean()),
     recurrence: v.optional(recurrenceValidator),
     clearRecurrence: v.optional(v.boolean()),
   },
-  handler: async (ctx, { id, title, description, dueDate, projectId, priority, clearPriority, recurrence, clearRecurrence }) => {
+  handler: async (ctx, { id, title, description, dueDate, projectId, assigneeId, clearAssignee, priority, clearPriority, recurrence, clearRecurrence }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     const task = (await ctx.db.get(id)) as Doc<"tasks"> | null;
@@ -58,6 +113,8 @@ export const update = mutation({
     if (description !== undefined) patch.description = description;
     if (dueDate !== undefined) patch.dueDate = dueDate;
     if (projectId !== undefined) patch.projectId = projectId;
+    if (assigneeId !== undefined) patch.assigneeId = assigneeId;
+    if (clearAssignee) patch.assigneeId = undefined;
     if (priority !== undefined) patch.priority = priority;
     if (clearPriority) patch.priority = undefined;
     if (recurrence !== undefined) {
@@ -92,6 +149,7 @@ export const duplicate = mutation({
     return await ctx.db.insert("tasks", {
       userId,
       projectId: task.projectId,
+      assigneeId: task.assigneeId,
       title: task.title,
       description: task.description,
       dueDate: task.dueDate,
@@ -136,18 +194,14 @@ export const listToday = query({
     const today = todayInSP();
     const todayStartMs = Date.parse(today + "T03:00:00.000Z");
 
-    const allTasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    const allTasks = await getVisibleTasks(ctx, userId);
 
-    const results: (typeof allTasks[number] & { completedToday: boolean })[] = [];
+    const results: (Doc<"tasks"> & { completedToday: boolean })[] = [];
 
     for (const t of allTasks) {
       if (t.deleted) continue;
 
       if (t.recurrence) {
-        // Tarefa recorrente: ocorre hoje?
         if (!occursOnDate(t.recurrence, today)) continue;
         const completion = await ctx.db
           .query("taskCompletions")
@@ -157,7 +211,6 @@ export const listToday = query({
           .first();
         results.push({ ...t, completedToday: completion != null });
       } else {
-        // Tarefa avulsa: vencida ou de hoje (pendente), ou concluída hoje
         const pendingToday =
           !t.completed && t.dueDate != null && t.dueDate <= today;
         const completedToday =
@@ -178,10 +231,7 @@ export const listAll = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    const tasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    const tasks = await getVisibleTasks(ctx, userId);
     return tasks.filter((t) => !t.deleted && !t.completed);
   },
 });
@@ -211,12 +261,26 @@ export const complete = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     const task = await ctx.db.get(id);
-    if (!task || task.userId !== userId) throw new Error("Not found");
+    if (!task) throw new Error("Not found");
+
+    // Who gets the XP — assignee if set, otherwise creator
+    const beneficiaryId = (task.assigneeId ?? task.userId) as Id<"users">;
+
+    // Authorization: actor must be the beneficiary, manage them, or be master
+    if (beneficiaryId !== userId) {
+      const myProfile = await ctx.db
+        .query("userProfiles")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first();
+      const isMaster = myProfile?.role === "master";
+      const manages =
+        myProfile?.managedUserIds?.some((id) => id === beneficiaryId) ?? false;
+      if (!isMaster && !manages) throw new Error("Not authorized");
+    }
 
     const completionDate = occurrenceDate ?? todayInSP();
     const now = Date.now();
 
-    // Idempotência: não duplicar se já concluída nessa data
     const existing = await ctx.db
       .query("taskCompletions")
       .withIndex("by_task_date", (q) =>
@@ -224,10 +288,9 @@ export const complete = mutation({
       )
       .first();
     if (existing) {
-      // Já concluída — retorna stats atuais sem re-conceder XP
       const stats = await ctx.db
         .query("userStats")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .withIndex("by_user", (q) => q.eq("userId", beneficiaryId))
         .first();
       return {
         xpAwarded: 0,
@@ -238,16 +301,16 @@ export const complete = mutation({
       };
     }
 
-    // Para tarefas avulsas, marcar como concluída no registro
     if (!task.recurrence) {
       await ctx.db.patch(id, { completed: true, completedAt: now });
     }
 
-    const result = await awardXpForCompletion(ctx, userId);
+    // XP goes to the beneficiary (assignee ?? creator), not necessarily the actor
+    const result = await awardXpForCompletion(ctx, beneficiaryId);
 
     await ctx.db.insert("taskCompletions", {
       taskId: id,
-      userId,
+      userId: beneficiaryId,
       completedAt: now,
       completionDate,
       xpAwarded: XP_PER_TASK,
@@ -266,14 +329,12 @@ export const uncomplete = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     const task = await ctx.db.get(id);
-    if (!task || task.userId !== userId) throw new Error("Not found");
+    if (!task) throw new Error("Not found");
 
-    // Para tarefas avulsas, desmarcar como concluída
     if (!task.recurrence) {
       await ctx.db.patch(id, { completed: false, completedAt: undefined });
     }
 
-    // Busca o registro de conclusão a remover
     let completion;
     if (occurrenceDate) {
       completion = await ctx.db
@@ -291,7 +352,8 @@ export const uncomplete = mutation({
     }
 
     if (completion) {
-      await reverseXpForTask(ctx, userId, completion.xpAwarded);
+      // Reverse XP from whoever originally received it
+      await reverseXpForTask(ctx, completion.userId, completion.xpAwarded);
       await ctx.db.delete(completion._id);
     }
   },
@@ -310,7 +372,6 @@ export const search = query({
     let results: Doc<"tasks">[] = [];
 
     if (trimmed) {
-      // Busca full-text por título via search index
       const byTitle = await ctx.db
         .query("tasks")
         .withSearchIndex("search_title", (q) =>
@@ -320,7 +381,6 @@ export const search = query({
       const titleIds = new Set(byTitle.map((t) => t._id));
       const filtered = byTitle.filter((t) => !t.deleted);
 
-      // Complementa com busca em descrição (in-memory)
       const allTasks = await ctx.db
         .query("tasks")
         .withIndex("by_user", (q) => q.eq("userId", userId))
