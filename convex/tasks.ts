@@ -234,6 +234,16 @@ export const listAll = query({
   },
 });
 
+export const listForCalendar = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const tasks = await getVisibleTasks(ctx, userId);
+    return tasks.filter((t) => !t.deleted);
+  },
+});
+
 export const complete = mutation({
   args: {
     id: v.id("tasks"),

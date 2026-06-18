@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, List, Search, User, Settings, Users } from "lucide-react";
+import { CalendarDays, Calendar, List, Search, User, Settings, Users } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { ProjectList } from "@/components/projects/ProjectList";
@@ -9,6 +9,7 @@ import { ProjectList } from "@/components/projects/ProjectList";
 const navItems = [
   { href: "/today", icon: CalendarDays, label: "Hoje" },
   { href: "/tasks", icon: List, label: "Todas" },
+  { href: "/calendar", icon: Calendar, label: "Calendário" },
   { href: "/search", icon: Search, label: "Busca" },
   { href: "/profile", icon: User, label: "Perfil" },
   { href: "/settings", icon: Settings, label: "Config." },
