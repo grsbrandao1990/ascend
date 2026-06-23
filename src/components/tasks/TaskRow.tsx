@@ -7,6 +7,7 @@ import { isOverdue, isToday, todayString } from "@/lib/dates";
 import { PRIORITY_CONFIG } from "@/lib/nlpPriority";
 import { TaskForm } from "./TaskForm";
 import { useGamification } from "@/contexts/GamificationContext";
+import { getUserColor } from "@/lib/userColor";
 import type { TodayTask } from "./TaskList";
 
 interface TaskRowProps {
@@ -120,10 +121,10 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
               </span>
             )}
 
-            {assigneeProfile && (
+            {assigneeProfile && task.assigneeId && (
               <span
                 className="flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold flex-shrink-0"
-                style={{ background: "var(--primary)", color: "var(--on-primary)" }}
+                style={{ background: getUserColor(task.assigneeId), color: "#fff" }}
                 title={assigneeProfile.displayName}
               >
                 {assigneeProfile.displayName.charAt(0).toUpperCase()}

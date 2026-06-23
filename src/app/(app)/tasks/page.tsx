@@ -5,19 +5,28 @@ import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
+import { AssigneeFilter } from "@/components/tasks/AssigneeFilter";
 import { todayString } from "@/lib/dates";
 import { priorityRank } from "@/lib/nlpPriority";
 
 type SortMode = "date" | "project";
 
+function matchesAssignee(
+  task: { userId: string; assigneeId?: string },
+  userId: string
+): boolean {
+  return task.assigneeId === userId || (!task.assigneeId && task.userId === userId);
+}
+
 export default function TasksPage() {
   const tasks = useQuery(api.tasks.listAll);
   const projects = useQuery(api.projects.list);
+  const members = useQuery(api.userProfiles.listMembers);
   const [showForm, setShowForm] = useState(false);
   const [sort, setSort] = useState<SortMode>("date");
+  const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
 
   const today = todayString();
-
   const projectMap = new Map(projects?.map((p) => [p._id, p]) ?? []);
 
   useEffect(() => {
@@ -32,13 +41,17 @@ export default function TasksPage() {
     return () => document.removeEventListener("keydown", handleKey);
   }, [showForm]);
 
+  const filtered = assigneeFilter
+    ? tasks?.filter((t) => matchesAssignee(t, assigneeFilter))
+    : tasks;
+
   function byPriority<T extends { priority?: string }>(items: T[]): T[] {
     return [...items].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority));
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-on-surface">Todas as tarefas</h1>
         <div className="flex items-center gap-2">
           <div className="flex rounded-md border border-border text-xs overflow-hidden">
@@ -73,48 +86,54 @@ export default function TasksPage() {
         </div>
       </div>
 
+      <AssigneeFilter
+        members={members ?? []}
+        selected={assigneeFilter}
+        onChange={setAssigneeFilter}
+      />
+
       {sort === "date" ? (
         <>
-          {tasks && tasks.filter((t) => t.dueDate && t.dueDate < today).length > 0 && (
+          {filtered && filtered.filter((t) => t.dueDate && t.dueDate < today).length > 0 && (
             <section className="mb-8">
               <p className="text-xs font-medium text-warning uppercase tracking-wider mb-2 px-3">
-                Vencidas ({tasks.filter((t) => t.dueDate && t.dueDate < today).length})
+                Vencidas ({filtered.filter((t) => t.dueDate && t.dueDate < today).length})
               </p>
-              <TaskList tasks={byPriority(tasks.filter((t) => t.dueDate && t.dueDate < today))} />
+              <TaskList tasks={byPriority(filtered.filter((t) => t.dueDate && t.dueDate < today))} />
             </section>
           )}
 
           <section className="mb-8">
             <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider mb-2 px-3">
               {(() => {
-                const count = tasks?.filter((t) => t.dueDate && t.dueDate >= today).length;
+                const count = filtered?.filter((t) => t.dueDate && t.dueDate >= today).length;
                 return `Próximas${count != null ? ` (${count})` : ""}`;
               })()}
             </p>
             <TaskList
-              tasks={tasks ? byPriority(tasks.filter((t) => t.dueDate && t.dueDate >= today)) : undefined}
+              tasks={filtered ? byPriority(filtered.filter((t) => t.dueDate && t.dueDate >= today)) : undefined}
               emptyMessage="Nenhuma tarefa com data futura."
             />
           </section>
 
-          {tasks && tasks.filter((t) => !t.dueDate).length > 0 && (
+          {filtered && filtered.filter((t) => !t.dueDate).length > 0 && (
             <section className="mb-8">
               <p className="text-xs font-medium text-on-surface-variant uppercase tracking-wider mb-2 px-3">
-                Sem data ({tasks.filter((t) => !t.dueDate).length})
+                Sem data ({filtered.filter((t) => !t.dueDate).length})
               </p>
-              <TaskList tasks={byPriority(tasks.filter((t) => !t.dueDate))} />
+              <TaskList tasks={byPriority(filtered.filter((t) => !t.dueDate))} />
             </section>
           )}
         </>
       ) : (
         <>
           {(() => {
-            if (!tasks) return null;
+            if (!filtered) return null;
 
-            const withProject = tasks.filter((t) => t.projectId);
-            const withoutProject = tasks.filter((t) => !t.projectId);
+            const withProject = filtered.filter((t) => t.projectId);
+            const withoutProject = filtered.filter((t) => !t.projectId);
 
-            const grouped = new Map<string, typeof tasks>();
+            const grouped = new Map<string, typeof filtered>();
             for (const t of withProject) {
               const key = t.projectId!;
               if (!grouped.has(key)) grouped.set(key, []);
@@ -152,7 +171,7 @@ export default function TasksPage() {
                   </section>
                 )}
 
-                {tasks.length === 0 && (
+                {filtered.length === 0 && (
                   <TaskList tasks={[]} emptyMessage="Nenhuma tarefa pendente." />
                 )}
               </>

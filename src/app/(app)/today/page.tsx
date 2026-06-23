@@ -6,11 +6,21 @@ import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { priorityRank } from "@/lib/nlpPriority";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskForm } from "@/components/tasks/TaskForm";
+import { AssigneeFilter } from "@/components/tasks/AssigneeFilter";
+
+function matchesAssignee(
+  task: { userId: string; assigneeId?: string },
+  userId: string
+): boolean {
+  return task.assigneeId === userId || (!task.assigneeId && task.userId === userId);
+}
 
 export default function TodayPage() {
   const tasks = useQuery(api.tasks.listToday);
+  const members = useQuery(api.userProfiles.listMembers);
   const [showForm, setShowForm] = useState(false);
   const [doneExpanded, setDoneExpanded] = useState(true);
+  const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -24,24 +34,26 @@ export default function TodayPage() {
     return () => document.removeEventListener("keydown", handleKey);
   }, [showForm]);
 
-  const pending = tasks
+  const filtered = assigneeFilter
+    ? tasks?.filter((t) => matchesAssignee(t, assigneeFilter))
+    : tasks;
+
+  const pending = filtered
     ?.filter((t) => !(t.completedToday ?? t.completed))
     .slice()
     .sort((a, b) => {
-      // Agrupar por projeto
       if (a.projectId !== b.projectId) {
         if (!a.projectId) return 1;
         if (!b.projectId) return -1;
         return a.projectId < b.projectId ? -1 : 1;
       }
-      // Dentro do projeto, ordenar por prioridade
       return priorityRank(a.priority) - priorityRank(b.priority);
     });
-  const completedToday = tasks?.filter((t) => t.completedToday ?? t.completed);
+  const completedToday = filtered?.filter((t) => t.completedToday ?? t.completed);
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-on-surface">Hoje</h1>
         <button
           onClick={() => setShowForm(true)}
@@ -51,6 +63,12 @@ export default function TodayPage() {
           Nova tarefa
         </button>
       </div>
+
+      <AssigneeFilter
+        members={members ?? []}
+        selected={assigneeFilter}
+        onChange={setAssigneeFilter}
+      />
 
       <TaskList
         tasks={pending}
