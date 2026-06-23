@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Doc, Id } from "./_generated/dataModel";
 
 export const list = query({
   args: {},
@@ -17,14 +18,84 @@ export const list = query({
   },
 });
 
+// Projects from all users the current user can see (respects hierarchy)
+export const listVisible = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const myProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    const isMaster = myProfile?.role === "master";
+    const managedUserIds: Id<"users">[] = myProfile?.managedUserIds ?? [];
+    const visibleUserIds = [userId, ...managedUserIds];
+
+    let projects: Doc<"projects">[];
+
+    if (isMaster) {
+      projects = await ctx.db.query("projects").collect();
+    } else {
+      const results: Doc<"projects">[] = [];
+      for (const uid of visibleUserIds) {
+        const rows = await ctx.db
+          .query("projects")
+          .withIndex("by_user_archived", (q) => q.eq("userId", uid).eq("archived", false))
+          .collect();
+        results.push(...rows);
+      }
+      projects = results;
+    }
+
+    return projects.filter((p) => !p.archived);
+  },
+});
+
+// Projects for a specific user — only if the requester can see that user
+export const listByUser = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId: targetId }) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) return [];
+
+    if (authId !== targetId) {
+      const myProfile = await ctx.db
+        .query("userProfiles")
+        .withIndex("by_user", (q) => q.eq("userId", authId))
+        .first();
+      const isMaster = myProfile?.role === "master";
+      const manages = myProfile?.managedUserIds?.some((id) => id === targetId) ?? false;
+      if (!isMaster && !manages) return [];
+    }
+
+    return ctx.db
+      .query("projects")
+      .withIndex("by_user_archived", (q) => q.eq("userId", targetId).eq("archived", false))
+      .collect();
+  },
+});
+
 export const getById = query({
   args: { id: v.id("projects") },
   handler: async (ctx, { id }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
     const project = await ctx.db.get(id);
-    if (!project || project.userId !== userId) return null;
-    return project;
+    if (!project) return null;
+    if (project.userId === userId) return project;
+
+    // Allow if the requester can see the project owner
+    const myProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    const isMaster = myProfile?.role === "master";
+    const manages = myProfile?.managedUserIds?.some((id) => id === project.userId) ?? false;
+    if (isMaster || manages) return project;
+    return null;
   },
 });
 

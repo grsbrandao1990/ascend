@@ -46,7 +46,7 @@ export default function CalendarPage() {
   const [editing, setEditing] = useState<TodayTask | null>(null);
 
   const tasks = useQuery(api.tasks.listForCalendar);
-  const projects = useQuery(api.projects.list);
+  const projects = useQuery(api.projects.listVisible);
   const todayStr = toDateStr(now);
 
   const projectColorMap = useMemo(() => {
