@@ -58,8 +58,18 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
 
   const create = useMutation(api.tasks.create);
   const update = useMutation(api.tasks.update);
-  const projects = useQuery(api.projects.list);
+  const ownProjects = useQuery(api.projects.list);
+  const assigneeProjects = useQuery(
+    api.projects.listByUser,
+    assigneeId ? { userId: assigneeId } : "skip"
+  );
+  const projects = assigneeId ? (assigneeProjects ?? []) : (ownProjects ?? []);
   const members = useQuery(api.userProfiles.listMembers);
+
+  function handleAssigneeChange(newId: Id<"users"> | undefined) {
+    setAssigneeId(newId);
+    setSelectedProjectId(undefined);
+  }
 
   function toggleWeekday(day: number) {
     setWeekdays((prev) =>
@@ -213,7 +223,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
             <select
               value={assigneeId ?? ""}
               onChange={(e) =>
-                setAssigneeId(
+                handleAssigneeChange(
                   e.target.value ? (e.target.value as Id<"users">) : undefined
                 )
               }

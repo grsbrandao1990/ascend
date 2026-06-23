@@ -20,7 +20,7 @@ function matchesAssignee(
 
 export default function TasksPage() {
   const tasks = useQuery(api.tasks.listAll);
-  const projects = useQuery(api.projects.list);
+  const projects = useQuery(api.projects.listVisible);
   const members = useQuery(api.userProfiles.listMembers);
   const [showForm, setShowForm] = useState(false);
   const [sort, setSort] = useState<SortMode>("date");
