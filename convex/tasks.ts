@@ -370,48 +370,28 @@ export const uncomplete = mutation({
 export const search = query({
   args: {
     text: v.optional(v.string()),
-    projectId: v.optional(v.id("projects")),
+    projectIds: v.optional(v.array(v.id("projects"))),
   },
-  handler: async (ctx, { text, projectId }) => {
+  handler: async (ctx, { text, projectIds }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
+    const all = await getVisibleTasks(ctx, userId);
+    let results = all.filter((t) => !t.deleted);
+
     const trimmed = text?.trim() ?? "";
-    let results: Doc<"tasks">[] = [];
-
     if (trimmed) {
-      const byTitle = await ctx.db
-        .query("tasks")
-        .withSearchIndex("search_title", (q) =>
-          q.search("title", trimmed).eq("userId", userId)
-        )
-        .collect();
-      const titleIds = new Set(byTitle.map((t) => t._id));
-      const filtered = byTitle.filter((t) => !t.deleted);
-
-      const allTasks = await ctx.db
-        .query("tasks")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect();
       const lower = trimmed.toLowerCase();
-      const byDesc = allTasks.filter(
+      results = results.filter(
         (t) =>
-          !t.deleted &&
-          !titleIds.has(t._id) &&
+          t.title.toLowerCase().includes(lower) ||
           t.description?.toLowerCase().includes(lower)
       );
-
-      results = [...filtered, ...byDesc];
-    } else {
-      results = await ctx.db
-        .query("tasks")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect();
-      results = results.filter((t) => !t.deleted);
     }
 
-    if (projectId) {
-      results = results.filter((t) => t.projectId === projectId);
+    if (projectIds && projectIds.length > 0) {
+      const idSet = new Set<string>(projectIds);
+      results = results.filter((t) => t.projectId && idSet.has(t.projectId));
     }
 
     return results;
