@@ -13,6 +13,7 @@ export default function SearchPage() {
 
   const projects = useQuery(api.projects.listVisible);
   const myProfile = useQuery(api.userProfiles.getMyProfile);
+  const members = useQuery(api.userProfiles.listMembers);
 
   const projectIds = selectedProjectIds.size > 0
     ? ([...selectedProjectIds] as Id<"projects">[])
@@ -25,6 +26,12 @@ export default function SearchPage() {
 
   const hasFilter = text.length > 0 || selectedProjectIds.size > 0;
 
+  const nameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const m of members ?? []) map.set(m.userId as string, m.displayName);
+    return map;
+  }, [members]);
+
   function toggleProject(id: string) {
     setSelectedProjectIds((prev) => {
       const next = new Set(prev);
@@ -34,7 +41,6 @@ export default function SearchPage() {
     });
   }
 
-  // Sort projects: own first, then by owner name, then by project name
   const sortedProjects = useMemo(() => {
     if (!projects) return [];
     const myId = myProfile?.userId as string | undefined;
@@ -64,46 +70,57 @@ export default function SearchPage() {
 
         {/* Project pills */}
         {sortedProjects.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 items-center">
+          <div className="flex flex-wrap gap-2 items-start">
             {selectedProjectIds.size > 0 && (
               <button
                 onClick={() => setSelectedProjectIds(new Set())}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-on-surface-variant hover:text-on-surface border border-border hover:border-primary/50 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 self-center rounded-lg text-xs text-on-surface-variant hover:text-on-surface border border-border hover:border-primary/50 transition-colors"
               >
                 <X className="w-3 h-3" />
                 Limpar
               </button>
             )}
             {sortedProjects.map((p) => {
-              const ownerColor = getUserColor(p.userId as string);
+              const ownerId = p.userId as string;
+              const ownerColor = getUserColor(ownerId);
+              const ownerName = nameMap.get(ownerId) ?? "—";
               const selected = selectedProjectIds.has(p._id);
               return (
                 <button
                   key={p._id}
                   onClick={() => toggleProject(p._id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all"
+                  className="flex flex-col items-start px-3 pt-1.5 pb-2 rounded-lg border transition-all text-left"
                   style={
                     selected
                       ? {
                           borderColor: p.color,
                           backgroundColor: `${p.color}18`,
-                          color: "var(--on-surface)",
                         }
                       : {
                           borderColor: "var(--border)",
-                          color: "var(--on-surface-variant)",
                         }
                   }
                 >
+                  {/* Owner line */}
                   <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: ownerColor }}
-                  />
+                    className="flex items-center gap-1 leading-none mb-0.5"
+                    style={{ fontSize: "0.65rem" }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: ownerColor }}
+                    />
+                    <span style={{ color: ownerColor }}>{ownerName}</span>
+                  </span>
+                  {/* Project name line */}
                   <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: p.color }}
-                  />
-                  {p.name}
+                    className="text-xs font-medium leading-none"
+                    style={{
+                      color: selected ? "var(--on-surface)" : "var(--on-surface-variant)",
+                    }}
+                  >
+                    {p.name}
+                  </span>
                 </button>
               );
             })}
