@@ -5,7 +5,7 @@ import { XpBar } from "@/components/game/XpBar";
 import { LevelBadge } from "@/components/game/LevelBadge";
 
 export function TopBar() {
-  const stats = useQuery(api.stats.get);
+  const stats = useQuery(api.stats.get, {});
 
   return (
     <header className="h-12 flex-shrink-0 border-b border-border bg-surface flex items-center px-4 gap-3">
