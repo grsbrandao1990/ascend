@@ -18,10 +18,32 @@ import {
   xpIntoCurrentLevel,
 } from "./gameConfig";
 
+async function resolveTargetUserId(
+  ctx: Parameters<Parameters<typeof query>[0]["handler"]>[0],
+  authId: Id<"users">,
+  targetUserId?: Id<"users">
+): Promise<Id<"users"> | null> {
+  if (!targetUserId || targetUserId === authId) return authId;
+
+  const myProfile = await ctx.db
+    .query("userProfiles")
+    .withIndex("by_user", (q) => q.eq("userId", authId))
+    .first();
+
+  const isMaster = myProfile?.role === "master";
+  const manages = myProfile?.managedUserIds?.some((id) => id === targetUserId) ?? false;
+  if (!isMaster && !manages) return null;
+
+  return targetUserId;
+}
+
 export const get = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+  args: { targetUserId: v.optional(v.id("users")) },
+  handler: async (ctx, { targetUserId }) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) return null;
+
+    const userId = await resolveTargetUserId(ctx, authId, targetUserId);
     if (!userId) return null;
 
     const stats = await ctx.db
@@ -41,15 +63,11 @@ export const get = query({
       )
       .collect();
 
-    const dailyCount = completions.filter(
-      (c) => c.completionDate === today
-    ).length;
+    const dailyCount = completions.filter((c) => c.completionDate === today).length;
     const weeklyCount = completions.filter(
       (c) => c.completionDate >= weekStart && c.completionDate <= weekEnd
     ).length;
-    const monthlyCount = completions.filter(
-      (c) => c.completionDate >= monthStart
-    ).length;
+    const monthlyCount = completions.filter((c) => c.completionDate >= monthStart).length;
 
     const level = stats?.level ?? 1;
     const totalXp = stats?.totalXp ?? 0;
@@ -74,9 +92,12 @@ export const get = query({
 });
 
 export const weeklyBreakdown = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+  args: { targetUserId: v.optional(v.id("users")) },
+  handler: async (ctx, { targetUserId }) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) return null;
+
+    const userId = await resolveTargetUserId(ctx, authId, targetUserId);
     if (!userId) return null;
 
     const weeks = Array.from({ length: 6 }, (_, i) => {
@@ -144,9 +165,12 @@ export const weeklyBreakdown = query({
 });
 
 export const projectBreakdown = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+  args: { targetUserId: v.optional(v.id("users")) },
+  handler: async (ctx, { targetUserId }) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) return null;
+
+    const userId = await resolveTargetUserId(ctx, authId, targetUserId);
     if (!userId) return null;
 
     const sixWeeksAgo = nWeeksAgoStart(5);
