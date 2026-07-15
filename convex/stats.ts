@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, type QueryCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import {
   todayInSP,
@@ -19,7 +19,7 @@ import {
 } from "./gameConfig";
 
 async function resolveTargetUserId(
-  ctx: Parameters<Parameters<typeof query>[0]["handler"]>[0],
+  ctx: QueryCtx,
   authId: Id<"users">,
   targetUserId?: Id<"users">
 ): Promise<Id<"users"> | null> {
