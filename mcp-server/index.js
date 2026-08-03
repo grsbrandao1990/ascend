@@ -57,6 +57,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "list_members",
+      description: "Lista os membros da equipe do Ascend com ID e nome, para usar como responsável de uma tarefa",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
       name: "create_task",
       description: "Cria uma nova tarefa no Ascend",
       inputSchema: {
@@ -66,6 +71,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           description: { type: "string", description: "Descrição opcional" },
           dueDate: { type: "string", description: "Data no formato YYYY-MM-DD (opcional)" },
           projectId: { type: "string", description: "ID do projeto — use list_projects para obter (opcional)" },
+          assigneeId: { type: "string", description: "ID do responsável — use list_members para obter (opcional)" },
         },
         required: ["title"],
       },
@@ -91,6 +97,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "list_projects":
         return { content: [{ type: "text", text: JSON.stringify(await api("/api/projects"), null, 2) }] };
 
+      case "list_members":
+        return { content: [{ type: "text", text: JSON.stringify(await api("/api/members"), null, 2) }] };
+
       case "list_today":
         return { content: [{ type: "text", text: JSON.stringify(await api("/api/tasks/today"), null, 2) }] };
 
@@ -108,6 +117,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           description: args.description || undefined,
           dueDate: args.dueDate || undefined,
           projectId: args.projectId || undefined,
+          assigneeId: args.assigneeId || undefined,
         });
         return { content: [{ type: "text", text: `Tarefa criada! ID: ${result.id}` }] };
       }
