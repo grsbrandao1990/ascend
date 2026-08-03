@@ -20,15 +20,17 @@ export const createTask = internalMutation({
     description: v.optional(v.string()),
     dueDate: v.optional(v.string()),
     projectId: v.optional(v.id("projects")),
+    assigneeId: v.optional(v.id("users")),
     recurrence: v.optional(recurrenceValidator),
   },
-  handler: async (ctx, { userId, title, description, dueDate, projectId, recurrence }) => {
+  handler: async (ctx, { userId, title, description, dueDate, projectId, assigneeId, recurrence }) => {
     return await ctx.db.insert("tasks", {
       userId,
       title,
       description,
       dueDate: recurrence ? undefined : dueDate,
       projectId,
+      assigneeId,
       recurrence,
       completed: false,
       deleted: false,
@@ -147,5 +149,13 @@ export const listProjects = internalQuery({
         q.eq("userId", userId).eq("archived", false)
       )
       .collect();
+  },
+});
+
+export const listMembers = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const profiles = await ctx.db.query("userProfiles").collect();
+    return profiles.map((p) => ({ userId: p.userId, displayName: p.displayName }));
   },
 });

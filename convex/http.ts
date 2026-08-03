@@ -37,6 +37,7 @@ http.route({
       description: body.description,
       dueDate: body.dueDate,
       projectId: body.projectId,
+      assigneeId: body.assigneeId,
       recurrence: body.recurrence,
     });
     return json({ id }, 201);
@@ -106,6 +107,16 @@ http.route({
     if (!userId) return new Response("No user", { status: 404 });
     const projects = await ctx.runQuery(internal.internalApi.listProjects, { userId });
     return json(projects);
+  }),
+});
+
+http.route({
+  path: "/api/members",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    if (!validateSecret(request)) return unauthorized();
+    const members = await ctx.runQuery(internal.internalApi.listMembers);
+    return json(members);
   }),
 });
 
