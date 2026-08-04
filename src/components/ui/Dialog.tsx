@@ -6,9 +6,10 @@ interface DialogProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  size?: "md" | "lg";
 }
 
-export function Dialog({ title, onClose, children }: DialogProps) {
+export function Dialog({ title, onClose, children, size = "md" }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = "dialog-title";
 
@@ -35,9 +36,9 @@ export function Dialog({ title, onClose, children }: DialogProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 w-full max-w-md bg-surface-raised border border-border rounded-lg shadow-xl p-6 focus:outline-none"
+        className={`relative z-10 w-full bg-surface-raised border border-border rounded-lg shadow-xl focus:outline-none max-h-[88vh] flex flex-col ${size === "lg" ? "max-w-xl" : "max-w-md"}`}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
           <h2 id={titleId} className="text-base font-semibold text-on-surface">
             {title}
           </h2>
@@ -49,7 +50,9 @@ export function Dialog({ title, onClose, children }: DialogProps) {
             <X className="w-4 h-4" />
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto flex-1 px-6 pb-6">
+          {children}
+        </div>
       </div>
     </div>
   );
