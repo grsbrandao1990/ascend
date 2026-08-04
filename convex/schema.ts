@@ -64,6 +64,16 @@ export default defineSchema({
     managedUserIds: v.array(v.id("users")),
   }).index("by_user", ["userId"]),
 
+  taskComments: defineTable({
+    taskId: v.id("tasks"),
+    userId: v.id("users"),
+    text: v.string(),
+    parentCommentId: v.optional(v.id("taskComments")),
+    createdAt: v.number(),
+  })
+    .index("by_task", ["taskId"])
+    .index("by_parent", ["parentCommentId"]),
+
   goalAwards: defineTable({
     userId: v.id("users"),
     goalType: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),

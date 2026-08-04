@@ -8,6 +8,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { parseNlpDate } from "@/lib/nlpDate";
 import { parsePriority, PRIORITY_CONFIG, type Priority } from "@/lib/nlpPriority";
 import type { TodayTask } from "./TaskList";
+import { TaskComments } from "./TaskComments";
 
 interface TaskFormProps {
   task?: TodayTask;
@@ -167,7 +168,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   }
 
   return (
-    <Dialog onClose={onClose} title={isEditing ? "Editar tarefa" : "Nova tarefa"}>
+    <Dialog onClose={onClose} title={isEditing ? "Editar tarefa" : "Nova tarefa"} size={isEditing ? "lg" : "md"}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Título */}
         <div>
@@ -415,6 +416,13 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
           </button>
         </div>
       </form>
+
+      {isEditing && task?._id && (
+        <>
+          <hr className="border-border my-5" />
+          <TaskComments taskId={task._id} />
+        </>
+      )}
     </Dialog>
   );
 }
