@@ -4,6 +4,7 @@ import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { getUserColor } from "@/lib/userColor";
 import { AtSign, UserCheck } from "lucide-react";
+import { useTaskOpen } from "@/contexts/TaskOpenContext";
 
 function relativeTime(ts: number): string {
   const diff = Date.now() - ts;
@@ -24,11 +25,13 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
   const notifications = useQuery(api.notifications.listMine);
   const markRead = useMutation(api.notifications.markRead);
   const markAllRead = useMutation(api.notifications.markAllRead);
+  const { openTask } = useTaskOpen();
 
   const unreadCount = (notifications ?? []).filter((n) => !n.read).length;
 
-  async function handleClick(id: Id<"notifications">, read: boolean) {
+  async function handleClick(id: Id<"notifications">, taskId: Id<"tasks">, read: boolean) {
     if (!read) await markRead({ id });
+    openTask(taskId);
     onClose();
   }
 
@@ -73,7 +76,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
           return (
             <button
               key={n._id}
-              onClick={() => handleClick(n._id, n.read)}
+              onClick={() => handleClick(n._id, n.taskId, n.read)}
               className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-surface transition-colors text-left border-b border-border/50 last:border-0 ${
                 n.read ? "opacity-50" : ""
               }`}

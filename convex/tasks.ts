@@ -187,8 +187,15 @@ export const get = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
     const task = await ctx.db.get(id);
-    if (!task || task.userId !== userId || task.deleted) return null;
-    return task;
+    if (!task || task.deleted) return null;
+    if (task.userId === userId || task.assigneeId === userId) return task;
+    const myProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (myProfile?.role === "master") return task;
+    if (myProfile?.managedUserIds?.some((mid) => mid === task.userId)) return task;
+    return null;
   },
 });
 
