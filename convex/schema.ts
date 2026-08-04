@@ -74,6 +74,18 @@ export default defineSchema({
     .index("by_task", ["taskId"])
     .index("by_parent", ["parentCommentId"]),
 
+  notifications: defineTable({
+    userId: v.id("users"),
+    type: v.union(v.literal("mention"), v.literal("assigned")),
+    taskId: v.id("tasks"),
+    commentId: v.optional(v.id("taskComments")),
+    fromUserId: v.id("users"),
+    read: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_read", ["userId", "read"]),
+
   goalAwards: defineTable({
     userId: v.id("users"),
     goalType: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),

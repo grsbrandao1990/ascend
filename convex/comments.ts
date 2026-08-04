@@ -51,13 +51,35 @@ export const create = mutation({
     const hasAccess = await canAccessTask(ctx.db, authId, taskId);
     if (!hasAccess) throw new Error("Sem acesso");
 
-    return ctx.db.insert("taskComments", {
+    const commentId = await ctx.db.insert("taskComments", {
       taskId,
       userId: authId,
       text: text.trim(),
       parentCommentId,
       createdAt: Date.now(),
     });
+
+    // Create notifications for @mentions
+    const mentionRegex = /@\[([^:]+):[^\]]+\]/g;
+    let match;
+    const notified = new Set<string>();
+    while ((match = mentionRegex.exec(text)) !== null) {
+      const mentionedId = match[1] as Id<"users">;
+      if (mentionedId !== authId && !notified.has(mentionedId)) {
+        notified.add(mentionedId);
+        await ctx.db.insert("notifications", {
+          userId: mentionedId,
+          type: "mention" as const,
+          taskId,
+          commentId,
+          fromUserId: authId,
+          read: false,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    return commentId;
   },
 });
 

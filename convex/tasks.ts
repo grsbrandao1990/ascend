@@ -71,7 +71,7 @@ export const create = mutation({
   handler: async (ctx, { projectId, assigneeId, title, description, dueDate, priority, recurrence }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
-    return await ctx.db.insert("tasks", {
+    const id = await ctx.db.insert("tasks", {
       userId,
       projectId,
       assigneeId,
@@ -84,6 +84,17 @@ export const create = mutation({
       deleted: false,
       createdAt: Date.now(),
     });
+    if (assigneeId && assigneeId !== userId) {
+      await ctx.db.insert("notifications", {
+        userId: assigneeId,
+        type: "assigned" as const,
+        taskId: id,
+        fromUserId: userId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+    return id;
   },
 });
 
@@ -123,6 +134,16 @@ export const update = mutation({
       patch.recurrence = undefined;
     }
     await ctx.db.patch(id, patch);
+    if (assigneeId && assigneeId !== userId && assigneeId !== task.assigneeId) {
+      await ctx.db.insert("notifications", {
+        userId: assigneeId,
+        type: "assigned" as const,
+        taskId: id,
+        fromUserId: userId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
   },
 });
 
