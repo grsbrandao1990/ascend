@@ -6,19 +6,22 @@ export const recurrenceValidator = v.object({
   type: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
   weekdays: v.optional(v.array(v.number())),
   monthDay: v.optional(v.number()),
+  interval: v.optional(v.number()),    // weeks between occurrences (weekly only)
+  startDate: v.optional(v.string()),   // anchor date for interval calculation (YYYY-MM-DD)
 });
 
 export type RecurrenceRule = {
   type: "daily" | "weekly" | "monthly";
   weekdays?: number[]; // 0=Sun … 6=Sat
   monthDay?: number;   // 1-31
+  interval?: number;   // weeks
+  startDate?: string;  // YYYY-MM-DD
 };
 
 /** Retorna true se a tarefa com essa regra ocorre na data informada (YYYY-MM-DD). */
 export function occursOnDate(rule: RecurrenceRule, dateStr: string): boolean {
-  // Usa noon UTC para evitar qualquer problema de DST/fuso
   const d = new Date(dateStr + "T12:00:00.000Z");
-  const dayOfWeek = d.getUTCDay();   // 0=Dom, 6=Sab
+  const dayOfWeek = d.getUTCDay();
   const dayOfMonth = d.getUTCDate();
   const year = d.getUTCFullYear();
   const month = d.getUTCMonth() + 1;
@@ -26,8 +29,19 @@ export function occursOnDate(rule: RecurrenceRule, dateStr: string): boolean {
   switch (rule.type) {
     case "daily":
       return true;
-    case "weekly":
-      return (rule.weekdays ?? []).includes(dayOfWeek);
+    case "weekly": {
+      const dayMatch = (rule.weekdays ?? []).includes(dayOfWeek);
+      if (!dayMatch) return false;
+      const interval = rule.interval ?? 1;
+      if (interval <= 1) return true;
+      const start = rule.startDate ?? dateStr;
+      const startD = new Date(start + "T12:00:00.000Z");
+      const targetD = new Date(dateStr + "T12:00:00.000Z");
+      const weekDiff = Math.round(
+        (targetD.getTime() - startD.getTime()) / (7 * 24 * 60 * 60 * 1000)
+      );
+      return weekDiff >= 0 && weekDiff % interval === 0;
+    }
     case "monthly": {
       const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
       const target = Math.min(rule.monthDay ?? 1, lastDay);
@@ -36,24 +50,12 @@ export function occursOnDate(rule: RecurrenceRule, dateStr: string): boolean {
   }
 }
 
-/**
- * Mutation interna idempotente chamada pelo cron diário.
- * No modelo de query dinâmica, as ocorrências são derivadas em tempo real
- * pelo listToday — esta mutation é o hook de extensibilidade para
- * lógica futura (notificações, pré-aquecimento de cache, etc.).
- */
 export const ensureTodayOccurrences = internalMutation({
   args: {},
   handler: async (ctx) => {
     const today = todayInSP();
-    // Busca todas as tarefas recorrentes não deletadas
-    const tasks = await ctx.db
-      .query("tasks")
-      .collect();
-    const recurring = tasks.filter(
-      (t) => !t.deleted && t.recurrence != null
-    );
-    // Valida quais ocorrem hoje (útil para debug no painel do Convex)
+    const tasks = await ctx.db.query("tasks").collect();
+    const recurring = tasks.filter((t) => !t.deleted && t.recurrence != null);
     const todayCount = recurring.filter((t) =>
       occursOnDate(t.recurrence!, today)
     ).length;

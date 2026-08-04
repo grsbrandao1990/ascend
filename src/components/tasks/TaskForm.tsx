@@ -56,6 +56,9 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   const [monthDay, setMonthDay] = useState<number>(
     task?.recurrence?.monthDay ?? 1
   );
+  const [weekInterval, setWeekInterval] = useState<number>(
+    task?.recurrence?.interval ?? 1
+  );
 
   const create = useMutation(api.tasks.create);
   const update = useMutation(api.tasks.update);
@@ -103,7 +106,13 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   function buildRecurrence() {
     if (!recurring) return undefined;
     if (recType === "daily") return { type: "daily" as const };
-    if (recType === "weekly") return { type: "weekly" as const, weekdays };
+    if (recType === "weekly") {
+      const interval = weekInterval > 1 ? weekInterval : undefined;
+      const startDate = interval
+        ? (task?.recurrence?.startDate ?? new Date().toISOString().slice(0, 10))
+        : undefined;
+      return { type: "weekly" as const, weekdays, interval, startDate };
+    }
     return { type: "monthly" as const, monthDay };
   }
 
@@ -251,7 +260,7 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Detalhes opcionais..."
             rows={2}
-            className="w-full px-3 py-2 bg-surface border border-border rounded-md text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary resize-none"
+            className="w-full px-3 py-2 bg-surface border border-border rounded-md text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary resize-y min-h-[60px]"
           />
         </div>
 
@@ -288,21 +297,39 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
               </select>
 
               {recType === "weekly" && (
-                <div className="flex gap-1.5 flex-wrap">
-                  {WEEKDAYS.map(({ label, value }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => toggleWeekday(value)}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                        weekdays.includes(value)
-                          ? "bg-primary text-on-primary"
-                          : "bg-surface-raised text-on-surface-variant hover:text-on-surface"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                <div className="space-y-3">
+                  <div className="flex gap-1.5 flex-wrap">
+                    {WEEKDAYS.map(({ label, value }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => toggleWeekday(value)}
+                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                          weekdays.includes(value)
+                            ? "bg-primary text-on-primary"
+                            : "bg-surface-raised text-on-surface-variant hover:text-on-surface"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-on-surface-variant">A cada</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={weekInterval}
+                      onChange={(e) =>
+                        setWeekInterval(Math.min(12, Math.max(1, Number(e.target.value))))
+                      }
+                      className="w-16 px-3 py-1.5 bg-surface border border-border rounded-md text-sm text-on-surface focus:outline-none focus:border-primary text-center"
+                    />
+                    <span className="text-sm text-on-surface-variant">
+                      {weekInterval === 1 ? "semana" : "semanas"}
+                    </span>
+                  </div>
                 </div>
               )}
 
