@@ -88,15 +88,16 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
                 style={{ color: PRIORITY_CONFIG[task.priority].color }}
               />
             )}
-            <p
-              className={`text-sm ${
+            <button
+              onClick={() => setEditing(true)}
+              className={`text-sm text-left hover:underline ${
                 isCompleted
                   ? "text-on-surface-variant line-through"
                   : "text-on-surface"
               }`}
             >
               {task.title}
-            </p>
+            </button>
           </div>
 
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
