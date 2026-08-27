@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query, type QueryCtx } from "./_generated/server";
+import { mutation, query, type QueryCtx, type MutationCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { todayInSP } from "./lib/dates";
 import { Doc, Id } from "./_generated/dataModel";
@@ -272,27 +272,116 @@ export const listForCalendar = query({
   },
 });
 
+// Recurring tasks reset daily and don't map cleanly onto Kanban columns, so
+// the board only tracks one-off tasks.
+export const listForKanban = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    const tasks = await getVisibleTasks(ctx, userId);
+    return tasks.filter((t) => !t.deleted && !t.recurrence);
+  },
+});
+
+const completionResultValidator = v.object({
+  xpAwarded: v.number(),
+  goalBonuses: v.array(
+    v.object({
+      goalType: v.union(
+        v.literal("daily"),
+        v.literal("weekly"),
+        v.literal("monthly")
+      ),
+      xp: v.number(),
+    })
+  ),
+  leveledUp: v.boolean(),
+  newLevel: v.number(),
+  totalXp: v.number(),
+});
+
+async function applyCompletion(
+  ctx: MutationCtx,
+  task: Doc<"tasks">,
+  beneficiaryId: Id<"users">,
+  occurrenceDate?: string
+) {
+  const completionDate = occurrenceDate ?? todayInSP();
+  const now = Date.now();
+
+  const existing = await ctx.db
+    .query("taskCompletions")
+    .withIndex("by_task_date", (q) =>
+      q.eq("taskId", task._id).eq("completionDate", completionDate)
+    )
+    .first();
+  if (existing) {
+    const stats = await ctx.db
+      .query("userStats")
+      .withIndex("by_user", (q) => q.eq("userId", beneficiaryId))
+      .first();
+    return {
+      xpAwarded: 0,
+      goalBonuses: [],
+      leveledUp: false,
+      newLevel: stats?.level ?? 1,
+      totalXp: stats?.totalXp ?? 0,
+    };
+  }
+
+  if (!task.recurrence) {
+    await ctx.db.patch(task._id, { completed: true, completedAt: now, status: "done" as const });
+  }
+
+  // XP goes to the beneficiary (assignee ?? creator), not necessarily the actor
+  const result = await awardXpForCompletion(ctx, beneficiaryId);
+
+  await ctx.db.insert("taskCompletions", {
+    taskId: task._id,
+    userId: beneficiaryId,
+    completedAt: now,
+    completionDate,
+    xpAwarded: XP_PER_TASK,
+  });
+
+  return result;
+}
+
+async function applyUncompletion(ctx: MutationCtx, task: Doc<"tasks">, occurrenceDate?: string) {
+  if (!task.recurrence) {
+    await ctx.db.patch(task._id, { completed: false, completedAt: undefined });
+  }
+
+  let completion;
+  if (occurrenceDate) {
+    completion = await ctx.db
+      .query("taskCompletions")
+      .withIndex("by_task_date", (q) =>
+        q.eq("taskId", task._id).eq("completionDate", occurrenceDate)
+      )
+      .first();
+  } else {
+    completion = await ctx.db
+      .query("taskCompletions")
+      .withIndex("by_task", (q) => q.eq("taskId", task._id))
+      .order("desc")
+      .first();
+  }
+
+  if (completion) {
+    // Reverse XP from whoever originally received it
+    await reverseXpForTask(ctx, completion.userId, completion.xpAwarded);
+    await ctx.db.delete(completion._id);
+  }
+}
+
 export const complete = mutation({
   args: {
     id: v.id("tasks"),
     occurrenceDate: v.optional(v.string()),
   },
-  returns: v.object({
-    xpAwarded: v.number(),
-    goalBonuses: v.array(
-      v.object({
-        goalType: v.union(
-          v.literal("daily"),
-          v.literal("weekly"),
-          v.literal("monthly")
-        ),
-        xp: v.number(),
-      })
-    ),
-    leveledUp: v.boolean(),
-    newLevel: v.number(),
-    totalXp: v.number(),
-  }),
+  returns: completionResultValidator,
   handler: async (ctx, { id, occurrenceDate }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
@@ -314,45 +403,7 @@ export const complete = mutation({
       if (!isMaster && !manages) throw new Error("Not authorized");
     }
 
-    const completionDate = occurrenceDate ?? todayInSP();
-    const now = Date.now();
-
-    const existing = await ctx.db
-      .query("taskCompletions")
-      .withIndex("by_task_date", (q) =>
-        q.eq("taskId", id).eq("completionDate", completionDate)
-      )
-      .first();
-    if (existing) {
-      const stats = await ctx.db
-        .query("userStats")
-        .withIndex("by_user", (q) => q.eq("userId", beneficiaryId))
-        .first();
-      return {
-        xpAwarded: 0,
-        goalBonuses: [],
-        leveledUp: false,
-        newLevel: stats?.level ?? 1,
-        totalXp: stats?.totalXp ?? 0,
-      };
-    }
-
-    if (!task.recurrence) {
-      await ctx.db.patch(id, { completed: true, completedAt: now });
-    }
-
-    // XP goes to the beneficiary (assignee ?? creator), not necessarily the actor
-    const result = await awardXpForCompletion(ctx, beneficiaryId);
-
-    await ctx.db.insert("taskCompletions", {
-      taskId: id,
-      userId: beneficiaryId,
-      completedAt: now,
-      completionDate,
-      xpAwarded: XP_PER_TASK,
-    });
-
-    return result;
+    return await applyCompletion(ctx, task, beneficiaryId, occurrenceDate);
   },
 });
 
@@ -367,31 +418,48 @@ export const uncomplete = mutation({
     const task = await ctx.db.get(id);
     if (!task) throw new Error("Not found");
 
-    if (!task.recurrence) {
-      await ctx.db.patch(id, { completed: false, completedAt: undefined });
+    await applyUncompletion(ctx, task, occurrenceDate);
+  },
+});
+
+export const setStatus = mutation({
+  args: {
+    id: v.id("tasks"),
+    status: v.union(v.literal("todo"), v.literal("doing"), v.literal("done")),
+    occurrenceDate: v.optional(v.string()),
+  },
+  returns: v.union(completionResultValidator, v.null()),
+  handler: async (ctx, { id, status, occurrenceDate }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+    const task = await ctx.db.get(id);
+    if (!task) throw new Error("Not found");
+    if (task.recurrence) throw new Error("Tarefas recorrentes não aparecem no Kanban");
+
+    // Same rule as complete/uncomplete: the beneficiary (assignee ?? creator),
+    // whoever manages them, or a master can move the card.
+    const beneficiaryId = (task.assigneeId ?? task.userId) as Id<"users">;
+    if (beneficiaryId !== userId) {
+      const myProfile = await ctx.db
+        .query("userProfiles")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first();
+      const isMaster = myProfile?.role === "master";
+      const manages =
+        myProfile?.managedUserIds?.some((mid) => mid === beneficiaryId) ?? false;
+      if (!isMaster && !manages) throw new Error("Not authorized");
     }
 
-    let completion;
-    if (occurrenceDate) {
-      completion = await ctx.db
-        .query("taskCompletions")
-        .withIndex("by_task_date", (q) =>
-          q.eq("taskId", id).eq("completionDate", occurrenceDate)
-        )
-        .first();
-    } else {
-      completion = await ctx.db
-        .query("taskCompletions")
-        .withIndex("by_task", (q) => q.eq("taskId", id))
-        .order("desc")
-        .first();
+    if (status === "done") {
+      if (task.completed) return null;
+      return await applyCompletion(ctx, task, beneficiaryId, occurrenceDate);
     }
 
-    if (completion) {
-      // Reverse XP from whoever originally received it
-      await reverseXpForTask(ctx, completion.userId, completion.xpAwarded);
-      await ctx.db.delete(completion._id);
+    if (task.completed) {
+      await applyUncompletion(ctx, task, occurrenceDate);
     }
+    await ctx.db.patch(id, { status });
+    return null;
   },
 });
 

@@ -8,15 +8,9 @@ import { TaskForm } from "@/components/tasks/TaskForm";
 import { AssigneeFilter } from "@/components/tasks/AssigneeFilter";
 import { todayString } from "@/lib/dates";
 import { priorityRank } from "@/lib/nlpPriority";
+import { matchesAssignee } from "@/lib/taskFilters";
 
 type SortMode = "date" | "project";
-
-function matchesAssignee(
-  task: { userId: string; assigneeId?: string },
-  userId: string
-): boolean {
-  return task.assigneeId === userId || (!task.assigneeId && task.userId === userId);
-}
 
 export default function TasksPage() {
   const tasks = useQuery(api.tasks.listAll);
