@@ -5,6 +5,7 @@ import { api } from "@convex/_generated/api";
 import { Copy, Flag, Pencil, Repeat2, Trash2 } from "lucide-react";
 import { isOverdue, isToday, todayString } from "@/lib/dates";
 import { PRIORITY_CONFIG } from "@/lib/nlpPriority";
+import { STATUS_CONFIG, taskColumn } from "@/lib/taskStatus";
 import { TaskForm } from "./TaskForm";
 import { useGamification } from "@/contexts/GamificationContext";
 import { getUserColor } from "@/lib/userColor";
@@ -101,6 +102,18 @@ export function TaskRow({ task, showProject = true }: TaskRowProps) {
           </div>
 
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            {!task.recurrence && (() => {
+              const { label, color } = STATUS_CONFIG[taskColumn(task)];
+              return (
+                <span
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: `${color}22`, color }}
+                >
+                  {label}
+                </span>
+              );
+            })()}
+
             {showProject && project && (
               <span className="flex items-center gap-1 text-xs text-on-surface-variant">
                 <span

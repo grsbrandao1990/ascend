@@ -7,6 +7,8 @@ import { Flag } from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { parseNlpDate } from "@/lib/nlpDate";
 import { parsePriority, PRIORITY_CONFIG, type Priority } from "@/lib/nlpPriority";
+import { STATUS_CONFIG, STATUSES, taskColumn, type TaskStatus } from "@/lib/taskStatus";
+import { useGamification } from "@/contexts/GamificationContext";
 import type { TodayTask } from "./TaskList";
 import { TaskComments } from "./TaskComments";
 
@@ -45,6 +47,11 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Estágio — muda na hora (fora do submit do form), igual ao drag-and-drop do Kanban
+  const [stage, setStage] = useState<TaskStatus>(task ? taskColumn(task) : "todo");
+  const [stageLoading, setStageLoading] = useState(false);
+  const [stageError, setStageError] = useState<string | null>(null);
+
   // Recorrência
   const [recurring, setRecurring] = useState(task?.recurrence != null);
   const [recType, setRecType] = useState<RecurrenceType>(
@@ -62,6 +69,8 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
 
   const create = useMutation(api.tasks.create);
   const update = useMutation(api.tasks.update);
+  const setTaskStatus = useMutation(api.tasks.setStatus);
+  const { handleTaskCompleted } = useGamification();
   const ownProjects = useQuery(api.projects.list);
   const assigneeProjects = useQuery(
     api.projects.listByUser,
@@ -73,6 +82,23 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
   function handleAssigneeChange(newId: Id<"users"> | undefined) {
     setAssigneeId(newId);
     setSelectedProjectId(undefined);
+  }
+
+  async function handleStageChange(next: TaskStatus) {
+    if (!task || next === stage) return;
+    const previous = stage;
+    setStage(next);
+    setStageLoading(true);
+    setStageError(null);
+    try {
+      const result = await setTaskStatus({ id: task._id, status: next });
+      if (result) handleTaskCompleted(result);
+    } catch {
+      setStage(previous);
+      setStageError("Não consegui mudar o estágio. Tenta de novo.");
+    } finally {
+      setStageLoading(false);
+    }
   }
 
   function toggleWeekday(day: number) {
@@ -223,6 +249,38 @@ export function TaskForm({ task, projectId, onClose }: TaskFormProps) {
             })}
           </div>
         </div>
+
+        {/* Estágio — só em tarefas existentes e não recorrentes (não aparecem no Kanban) */}
+        {isEditing && !task.recurrence && (
+          <div>
+            <label className="block text-sm text-on-surface-variant mb-1.5">
+              Estágio
+            </label>
+            <div className="flex gap-2">
+              {STATUSES.map((s) => {
+                const { label, color } = STATUS_CONFIG[s];
+                const selected = stage === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={stageLoading}
+                    onClick={() => handleStageChange(s)}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border disabled:opacity-50"
+                    style={
+                      selected
+                        ? { color, borderColor: color, backgroundColor: `${color}18` }
+                        : { borderColor: "var(--border)", color: "var(--on-surface-variant)" }
+                    }
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {stageError && <p className="text-xs text-error mt-1">{stageError}</p>}
+          </div>
+        )}
 
         {/* Responsável — só aparece se há membros cadastrados */}
         {members && members.length > 0 && (

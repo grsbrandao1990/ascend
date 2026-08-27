@@ -5,6 +5,7 @@ import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { Plus } from "lucide-react";
 import { matchesAssignee } from "@/lib/taskFilters";
+import { STATUS_CONFIG, STATUSES, taskColumn, type TaskStatus } from "@/lib/taskStatus";
 import { AssigneeFilter } from "@/components/tasks/AssigneeFilter";
 import { KanbanCard } from "@/components/tasks/KanbanCard";
 import { TaskForm } from "@/components/tasks/TaskForm";
@@ -12,21 +13,17 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useGamification } from "@/contexts/GamificationContext";
 import type { TodayTask } from "@/components/tasks/TaskList";
 
-type Status = "todo" | "doing" | "done";
+type Status = TaskStatus;
 
-const COLUMNS: Array<{ status: Status; label: string }> = [
-  { status: "todo", label: "A Fazer" },
-  { status: "doing", label: "Fazendo" },
-  { status: "done", label: "Concluído" },
-];
+const COLUMNS: Array<{ status: Status; label: string }> = STATUSES.map((status) => ({
+  status,
+  label: STATUS_CONFIG[status].label,
+}));
 
 // Keep the "Concluído" column from growing forever — only show recent history.
 const DONE_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 
-function columnOf(task: TodayTask): Status {
-  if (task.completed) return "done";
-  return (task.status as Status | undefined) ?? "todo";
-}
+const columnOf = taskColumn;
 
 export default function KanbanPage() {
   const allTasks = useQuery(api.tasks.listForKanban);
