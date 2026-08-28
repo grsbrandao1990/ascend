@@ -425,7 +425,7 @@ export const uncomplete = mutation({
 export const setStatus = mutation({
   args: {
     id: v.id("tasks"),
-    status: v.union(v.literal("todo"), v.literal("doing"), v.literal("done")),
+    status: v.union(v.literal("todo"), v.literal("doing"), v.literal("waiting"), v.literal("done")),
     occurrenceDate: v.optional(v.string()),
   },
   returns: v.union(completionResultValidator, v.null()),

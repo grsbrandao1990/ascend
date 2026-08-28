@@ -25,7 +25,9 @@ export default defineSchema({
     dueDate: v.optional(v.string()),
     priority: v.optional(v.union(v.literal("p1"), v.literal("p2"), v.literal("p3"))),
     recurrence: v.optional(recurrenceValidator),
-    status: v.optional(v.union(v.literal("todo"), v.literal("doing"), v.literal("done"))),
+    status: v.optional(
+      v.union(v.literal("todo"), v.literal("doing"), v.literal("waiting"), v.literal("done"))
+    ),
     completed: v.boolean(),
     completedAt: v.optional(v.number()),
     deleted: v.boolean(),

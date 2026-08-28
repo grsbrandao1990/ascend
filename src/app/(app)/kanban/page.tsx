@@ -52,7 +52,7 @@ export default function KanbanPage() {
   }, [allTasks, assigneeFilter]);
 
   const grouped = useMemo(() => {
-    const map: Record<Status, TodayTask[]> = { todo: [], doing: [], done: [] };
+    const map: Record<Status, TodayTask[]> = { todo: [], doing: [], waiting: [], done: [] };
     for (const t of tasks ?? []) map[columnOf(t)].push(t);
     return map;
   }, [tasks]);
@@ -78,7 +78,7 @@ export default function KanbanPage() {
 
       <AssigneeFilter members={members ?? []} selected={assigneeFilter} onChange={setAssigneeFilter} />
 
-      <div className="grid grid-cols-3 gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-4 gap-4 flex-1 min-h-0">
         {COLUMNS.map(({ status, label }) => {
           const columnTasks = grouped[status];
           return (
